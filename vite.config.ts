@@ -36,39 +36,58 @@
 // }
 
 
-// vite.config.ts
+// // vite.config.ts
+// import { defineConfig, Plugin } from "vite";
+// import react from "@vitejs/plugin-react-swc";
+// import path from "path";
+// import { createServer } from "./server";
+
+// export default defineConfig(({ mode }) => ({
+//   root: path.resolve(__dirname, "client"), // 👈 set Vite root to /client
+//   build: {
+//     outDir: path.resolve(__dirname, "dist"), // 👈 build will go to /dist
+//     emptyOutDir: true,
+//   },
+//   server: {
+//     host: "::",
+//     port: 8080,
+//     allowedHosts: ['https://merfume-three.vercel.app/'],
+//   },
+//   plugins: [react(), expressPlugin()],
+//   resolve: {
+//     alias: {
+//       "@": path.resolve(__dirname, "client"),
+//       "@shared": path.resolve(__dirname, "shared"),
+//     },
+//   },
+// }));
+
+// function expressPlugin(): Plugin {
+//   return {
+//     name: "express-plugin",
+//     apply: "serve",
+//     configureServer(server) {
+//       const app = createServer();
+//       server.middlewares.use(app);
+//     },
+//   };
+// }
+
 import { defineConfig, Plugin } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { createServer } from "./server";
-
-export default defineConfig(({ mode }) => ({
-  // root: path.resolve(__dirname, "client"), // 👈 set Vite root to /client
-  plugins: [react(), expressPlugin()],
+export default defineConfig({
+  root: 'client', // 👈 tells Vite that your app starts in /client
   build: {
-    outDir: path.resolve(__dirname, "dist"), // 👈 build will go to /dist
+    outDir: '../dist', // 👈 build goes outside of /client
+    emptyOutDir: true,
   },
-  server: {
-    host: "::",
-    port: 8080,
-    allowedHosts: ['https://merfume-three.vercel.app/'],
-  },
-  // plugins: [react(), expressPlugin()],
+  plugins: [react()],
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "client"),
-      "@shared": path.resolve(__dirname, "shared"),
+      '@': path.resolve(__dirname, './client'),
+      '@shared': path.resolve(__dirname, './shared'),
     },
   },
-}));
-
-function expressPlugin(): Plugin {
-  return {
-    name: "express-plugin",
-    apply: "serve",
-    configureServer(server) {
-      const app = createServer();
-      server.middlewares.use(app);
-    },
-  };
-}
+});
