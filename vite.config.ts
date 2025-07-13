@@ -51,7 +51,7 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
-    allowedHosts: ['.vercel.app'],
+    allowedHosts: ['https://merfume-three.vercel.app/'],
   },
   plugins: [react(), expressPlugin()],
   resolve: {
