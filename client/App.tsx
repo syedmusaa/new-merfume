@@ -55,7 +55,7 @@ import CeoVision from "./pages/CeoVision";
 import Contact from "./pages/Contact";
 import Cart from "./pages/Cart";
 import NotFound from "./pages/NotFound";
-import Success from "./pages/success";
+import Success from "./pages/Success";
 import AdminDashboard from "./pages/AdminDashboard";
 import OrderDetail from "./pages/OrderDetail";
 import AdminLogin from "./pages/Login";
