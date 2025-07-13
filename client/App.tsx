@@ -55,7 +55,7 @@ import CeoVision from "./pages/CeoVision";
 import Contact from "./pages/Contact";
 import Cart from "./pages/Cart";
 import NotFound from "./pages/NotFound";
-import Success from "./pages/check-out/page";
+import Success from "./pages/Success";
 import AdminDashboard from "./pages/AdminDashboard";
 import OrderDetail from "./pages/OrderDetail";
 import AdminLogin from "./pages/Login";
@@ -76,7 +76,7 @@ const App = () => (
             <Route path="/ceo-vision" element={<CeoVision />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/cart" element={<Cart />} />
-            <Route path="/success" element={<Success />} />
+            <Route path="/Success" element={<Success />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin/orders/:orderId" element={<OrderDetail />} />
