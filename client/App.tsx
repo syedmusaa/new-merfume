@@ -88,7 +88,8 @@ const App = () => (
   </CartProvider>
 );
 
-createRoot(document.getElementById("root")!).render(<App />);
+// createRoot(document.getElementById("root")!).render(<App />);
+export default App;
 
 
 // // src/App.tsx
