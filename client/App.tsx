@@ -58,7 +58,7 @@ import NotFound from "./pages/NotFound";
 import Success from "./pages/Success";
 import AdminDashboard from "./pages/AdminDashboard";
 import OrderDetail from "./pages/OrderDetail";
-import AdminLogin from "./pages/Login";
+import AdminLogin from "./pages/AdminLogin";
 
 const queryClient = new QueryClient();
 
