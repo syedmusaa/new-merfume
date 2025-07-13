@@ -404,14 +404,19 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from "@/components/ui/table";
 import { Download } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 
 export default function AdminDashboard() {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
 
   const fetchOrdersFromBackend = () => {
     fetch("https://b14473c22c50.ngrok-free.app/api/retrieve-orders")
@@ -420,34 +425,41 @@ export default function AdminDashboard() {
       .catch((err) => console.error("Fetch error:", err))
       .finally(() => setLoading(false));
   };
-  
 
   useEffect(() => {
-    const isAuthenticated = localStorage.getItem("adminAuth");
-    if (!isAuthenticated) {
-      navigate("/admin/login");
-      return;
-    }
-
     fetchOrdersFromBackend();
-    const interval = setInterval(fetchOrdersFromBackend, 10000); // Refresh every 10s
-
+    const interval = setInterval(fetchOrdersFromBackend, 10000); // refresh every 10s
     return () => clearInterval(interval);
-  }, [navigate]);
+  }, []);
 
   const exportToCSV = () => {
-    const headers = ["Order ID", "Date", "Payment ID", "Total", "Items"];
+    const headers = [
+      "Order ID",
+      "Date",
+      "Payment ID",
+      "Total",
+      "Item Count",
+      "Item Details"
+    ];
+
     const csv = [
       headers.join(","),
-      ...orders.map((o) =>
-        [
-          o.id,
-          new Date(o.date).toLocaleString(),
-          o.paymentId,
-          o.total,
-          o.items?.length || 0,
-        ].join(",")
-      ),
+      ...orders.map((order) => {
+        const items = order.items
+          ?.map(
+            (item: any) =>
+              `${item.name} (${item.brand}) - ₹${item.price} x${item.quantity}`
+          )
+          .join(" | ");
+        return [
+          order.id,
+          new Date(order.date).toLocaleString(),
+          order.paymentId,
+          order.total,
+          order.items?.length || 0,
+          `"${items}"`
+        ].join(",");
+      })
     ].join("\n");
 
     const blob = new Blob([csv], { type: "text/csv" });
@@ -462,35 +474,51 @@ export default function AdminDashboard() {
 
   return (
     <div className="p-8">
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">Admin Orders</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">🧾 Admin Orders</h1>
         <Button onClick={exportToCSV}>
           <Download className="h-4 w-4 mr-2" /> Export
         </Button>
       </div>
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>ID</TableHead>
-            <TableHead>Date</TableHead>
-            <TableHead>Payment ID</TableHead>
-            <TableHead>Total</TableHead>
-            <TableHead>Items</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {orders.map((order) => (
-            <TableRow key={order.id}>
-              <TableCell>{order.id}</TableCell>
-              <TableCell>{new Date(order.date).toLocaleString()}</TableCell>
-              <TableCell>{order.paymentId}</TableCell>
-              <TableCell>₹{order.total}</TableCell>
-              <TableCell>{order.items?.length || 0}</TableCell>
+      {orders.length === 0 ? (
+        <p>No orders found.</p>
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Order ID</TableHead>
+              <TableHead>Date</TableHead>
+              <TableHead>Payment ID</TableHead>
+              <TableHead>Total</TableHead>
+              <TableHead>Items</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {orders.map((order) => (
+              <TableRow key={order.id}>
+                <TableCell>{order.id}</TableCell>
+                <TableCell>{new Date(order.date).toLocaleString()}</TableCell>
+                <TableCell>{order.paymentId}</TableCell>
+                <TableCell>₹{order.total}</TableCell>
+                <TableCell>
+                  {order.items?.map((item: any) => (
+                    <div key={item.id} className="mb-2">
+                      <div className="font-semibold">{item.name}</div>
+                      <div className="text-sm text-gray-500">
+                        Brand: {item.brand}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        ₹{item.price} x {item.quantity}
+                      </div>
+                    </div>
+                  ))}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
     </div>
   );
 }
