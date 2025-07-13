@@ -13,7 +13,7 @@ export default function Navigation() {
     { name: "Store", path: "/store" },
     { name: "CEO Vision", path: "/ceo-vision" },
     { name: "Contact Us", path: "/contact" },
-    { name: "Login", path: "/admin/login" },
+    { name: "Recent order Reciept", path: "/success" },
   ];
 
   const isActive = (path: string) => location.pathname === path;
