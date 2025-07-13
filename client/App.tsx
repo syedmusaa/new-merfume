@@ -48,7 +48,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CartProvider } from "@/components/CartContext";
-import Index from "./pages/Index";
+import Home from "./pages/Home/page";
 import About from "./pages/About";
 import Store from "./pages/Store";
 import CeoVision from "./pages/CeoVision";
@@ -70,7 +70,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Index />} />
+            <Route path="/" element={<Home />} />
             <Route path="/about" element={<About />} />
             <Route path="/store" element={<Store />} />
             <Route path="/ceo-vision" element={<CeoVision />} />
