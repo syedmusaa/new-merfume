@@ -299,7 +299,7 @@ export default function Success() {
         setOrder(parsedOrder);
 
         // Send to backend
-        fetch("http://localhost:8081/api/send-orders", {
+        fetch("https://b14473c22c50.ngrok-free.app/api/send-orders", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: savedOrder,
@@ -313,10 +313,10 @@ export default function Success() {
         localStorage.removeItem("currentOrder");
       } catch (error) {
         console.error("Failed to parse order", error);
-        navigate("/store");
+        navigate("/success");
       }
     } else {
-      navigate("/store");
+      navigate("/success");
     }
   }, [navigate]);
 

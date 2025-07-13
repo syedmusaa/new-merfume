@@ -414,7 +414,7 @@ export default function AdminDashboard() {
   const navigate = useNavigate();
 
   const fetchOrdersFromBackend = () => {
-    fetch("http://localhost:8081/api/retrieve-orders")
+    fetch("https://b14473c22c50.ngrok-free.app/api/retrieve-orders")
       .then((res) => res.json())
       .then((data) => setOrders(data))
       .catch((err) => console.error("Fetch error:", err))
