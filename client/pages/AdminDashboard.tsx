@@ -419,12 +419,30 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
 
   const fetchOrdersFromBackend = () => {
-    fetch("https://b14473c22c50.ngrok-free.app/api/retrieve-orders")
-      .then((res) => res.json())
-      .then((data) => setOrders(data))
-      .catch((err) => console.error("Fetch error:", err))
-      .finally(() => setLoading(false));
-  };
+  fetch("https://tds-solutions-backend.onrender.com/api/retrieve-orders", {
+    method: "GET", // ✅ Specify GET method
+    headers: {
+      "Accept": "application/json",         // ✅ Expecting JSON
+      "Content-Type": "application/json",   // ✅ Sending as JSON (even if no body, it's safe)
+    },
+  })
+    .then((res) => {
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+      return res.json();
+    })
+    .then((data) => {
+      console.log("✅ Orders fetched successfully", data);
+      setOrders(data);
+    })
+    .catch((err) => {
+      console.error("❌ Fetch error:", err);
+    })
+    .finally(() => {
+      setLoading(false);
+    });
+};
 
   useEffect(() => {
     fetchOrdersFromBackend();

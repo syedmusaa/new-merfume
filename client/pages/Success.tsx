@@ -299,7 +299,7 @@ export default function Success() {
         setOrder(parsedOrder);
 
         // Send to backend
-        fetch("https://b14473c22c50.ngrok-free.app/api/send-orders", {
+        fetch("https://tds-solutions-backend.onrender.com/api/send-orders", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: savedOrder,
