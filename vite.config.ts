@@ -87,7 +87,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './client'),
-      '@shared': path.resolve(__dirname, './shared'),
+      // '@shared': path.resolve(__dirname, './shared'),
     },
   },
 });
