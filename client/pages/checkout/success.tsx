@@ -122,10 +122,10 @@ export default function CheckoutSuccess() {
         localStorage.removeItem("order"); // Optional: clear after showing
       } catch (error) {
         console.error("Failed to parse order data", error);
-        navigate("/store");
+        navigate("/checkout/success");
       }
     } else {
-      navigate("/store"); // No order? Redirect
+      navigate("/checkout/success"); // No order? Redirect
     }
   }, [navigate]);
 
