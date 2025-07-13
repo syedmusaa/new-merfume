@@ -298,7 +298,7 @@ const checkout = async () => {
         setCurrentOrder(order);
         clearCart();
         // Redirect to success page after payment
-        window.location.href = '/success'; // or use navigate if you prefer
+        window.location.href = '/check-out'; // or use navigate if you prefer
       },
       prefill: {
         name: 'Customer Name',
