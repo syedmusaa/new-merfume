@@ -76,7 +76,7 @@ const App = () => (
             <Route path="/ceo-vision" element={<CeoVision />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/cart" element={<Cart />} />
-            <Route path="/Success" element={<Success />} />
+            <Route path="/success" element={<Success />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin/orders/:orderId" element={<OrderDetail />} />
