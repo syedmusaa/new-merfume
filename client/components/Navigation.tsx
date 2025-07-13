@@ -1,11 +1,20 @@
-import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ShoppingCart, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+
+  // ✅ Redirect to /admin if admin login data exists in localStorage
+  useEffect(() => {
+    const adminAuth = localStorage.getItem("adminAuth");
+    if (adminAuth && location.pathname === "/") {
+      navigate("/admin");
+    }
+  }, [location.pathname, navigate]);
 
   const navItems = [
     { name: "Home", path: "/" },
@@ -13,7 +22,7 @@ export default function Navigation() {
     { name: "Store", path: "/store" },
     { name: "CEO Vision", path: "/ceo-vision" },
     { name: "Contact Us", path: "/contact" },
-    { name: "Recent order Reciept", path: "/success" },
+    { name: "Recent order Receipt", path: "/success" },
   ];
 
   const isActive = (path: string) => location.pathname === path;
