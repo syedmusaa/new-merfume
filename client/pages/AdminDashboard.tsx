@@ -721,9 +721,13 @@ export default function AdminDashboard() {
                       <h3 className="font-semibold">Customer Details</h3>
                       <div className="space-y-1 mt-2 text-sm">
                         <p><span className="text-muted-foreground">Name:</span> {selectedOrder.customerDetails?.name || "N/A"}</p>
+                        <p><span className="text-muted-foreground">Email:</span> {selectedOrder.customerDetails?.email || "N/A"}</p>
                         <p><span className="text-muted-foreground">Phone:</span> {selectedOrder.customerDetails?.phone || "N/A"}</p>
                         <p><span className="text-muted-foreground">Address:</span> {selectedOrder.customerDetails?.address || "N/A"}</p>
                         <p><span className="text-muted-foreground">Pincode:</span> {selectedOrder.customerDetails?.pincode || "N/A"}</p>
+                        <p><span className="text-muted-foreground">City:</span> {selectedOrder.customerDetails?.city || "N/A"}</p>
+                        <p><span className="text-muted-foreground">State:</span> {selectedOrder.customerDetails?.state || "N/A"}</p>
+                        <p><span className="text-muted-foreground">Country:</span> {selectedOrder.customerDetails?.country || "N/A"}</p>
                       </div>
                     </div>
                   </div>
