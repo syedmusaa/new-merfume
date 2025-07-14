@@ -421,6 +421,7 @@ interface OrderItem {
 interface UserDetails {
   name: string;
   phone: string;
+  email: string;
   address: string;
   pincode: string;
   city: string;

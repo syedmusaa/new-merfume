@@ -351,6 +351,7 @@ interface CartItem {
 interface UserDetails {
   name: string;
   phone: string;
+  email: string;
   address: string;
   pincode: string;
   city: string;
@@ -374,8 +375,9 @@ interface CartContextType {
   updateQuantity: (id: string, quantity: number) => void;
   totalItems: number;
   totalPrice: number;
-  checkout: (userDetails: UserDetails) => void;
+  checkout: (userDetails: UserDetails) => Promise<void>;
   clearCart: () => void;
+  currentOrder: Order | null;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -389,10 +391,22 @@ export function CartProvider({ children }: { children: ReactNode }) {
     return [];
   });
 
+  const [currentOrder, setCurrentOrder] = useState<Order | null>(null);
+
   // Save cart to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('cart', JSON.stringify(cart));
   }, [cart]);
+
+  // Load current order from localStorage on initial render
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedOrder = localStorage.getItem('currentOrder');
+      if (savedOrder) {
+        setCurrentOrder(JSON.parse(savedOrder));
+      }
+    }
+  }, []);
 
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
   const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
@@ -416,7 +430,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
   };
 
   const updateQuantity = (id: string, quantity: number) => {
-    if (quantity < 1) return;
+    if (quantity < 1) {
+      removeFromCart(id);
+      return;
+    }
     
     setCart(prevCart =>
       prevCart.map(item =>
@@ -427,32 +444,98 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const clearCart = () => {
     setCart([]);
+    localStorage.removeItem('cart');
   };
 
   const generateOrderId = () => {
     return 'ORD-' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5).toUpperCase();
   };
 
-  const generatePaymentId = () => {
-    return 'PAY-' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5).toUpperCase();
+  const loadRazorpayScript = (): Promise<boolean> => {
+    return new Promise((resolve) => {
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.async = true;
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
   };
 
-  const checkout = (userDetails: UserDetails) => {
-    const order: Order = {
-      id: generateOrderId(),
-      date: new Date().toISOString(),
-      items: [...cart],
-      total: totalPrice,
-      paymentId: generatePaymentId(),
-      userDetails
-    };
+  const checkout = async (userDetails: UserDetails) => {
+    try {
+      // 1. Load Razorpay script if not already loaded
+      if (!(window as any).Razorpay) {
+        const loaded = await loadRazorpayScript();
+        if (!loaded) {
+          throw new Error('Failed to load payment gateway');
+        }
+      }
 
-    // Save the current order to localStorage
-    localStorage.setItem('currentOrder', JSON.stringify(order));
-    
-    // In a real app, you would redirect to payment gateway here
-    // For demo, we'll just redirect to success page
-    window.location.href = '/success';
+      // 2. Create order ID (you might want to generate this from your backend)
+      const orderId = generateOrderId();
+
+      // 3. Prepare order details
+      const order: Order = {
+        id: orderId,
+        date: new Date().toISOString(),
+        items: [...cart],
+        total: totalPrice,
+        paymentId: '', // Will be set after successful payment
+        userDetails
+      };
+
+      // 4. Initialize Razorpay options
+      const options = {
+        key: 'rzp_test_E6f3s8PsZ5lTdu', // Replace with your Razorpay key
+        amount: totalPrice * 100, // Amount in paise
+        currency: 'INR',
+        name: 'Your Store Name',
+        description: 'Order Payment',
+        order_id: orderId,
+        handler: async (response: any) => {
+          // Payment success handler
+          const paymentId = response.razorpay_payment_id;
+          
+          // Update order with payment ID
+          const completedOrder: Order = {
+            ...order,
+            paymentId
+          };
+
+          // Save to state and localStorage
+          setCurrentOrder(completedOrder);
+          localStorage.setItem('currentOrder', JSON.stringify(completedOrder));
+          
+          // Clear cart
+          clearCart();
+          
+          // Redirect to success page
+          window.location.href = '/success';
+        },
+        prefill: {
+          name: userDetails.name,
+          email: userDetails.email,
+          contact: userDetails.phone
+        },
+        theme: {
+          color: '#F37254'
+        },
+        modal: {
+          ondismiss: () => {
+            console.log('Payment modal dismissed');
+          }
+        }
+      };
+
+      // 5. Open Razorpay payment modal
+      const rzp = new (window as any).Razorpay(options);
+      rzp.open();
+
+    } catch (error) {
+      console.error('Checkout error:', error);
+      alert('Payment failed. Please try again.');
+    }
   };
 
   return (
@@ -466,6 +549,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         totalPrice,
         checkout,
         clearCart,
+        currentOrder
       }}
     >
       {children}
