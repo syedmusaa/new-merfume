@@ -402,6 +402,146 @@
 // }
 
 
+// import { useEffect, useState } from "react";
+// import { Button } from "@/components/ui/button";
+// import {
+//   Table,
+//   TableBody,
+//   TableCell,
+//   TableHead,
+//   TableHeader,
+//   TableRow
+// } from "@/components/ui/table";
+// import { Download } from "lucide-react";
+
+// export default function AdminDashboard() {
+//   const [orders, setOrders] = useState<any[]>([]);
+//   const [loading, setLoading] = useState(true);
+
+//   const fetchOrdersFromBackend = () => {
+//   fetch("https://tds-solutions-backend.onrender.com/api/retrieve-orders", {
+//     method: "GET", // ✅ Specify GET method
+//     headers: {
+//       "Accept": "application/json",         // ✅ Expecting JSON
+//       "Content-Type": "application/json",   // ✅ Sending as JSON (even if no body, it's safe)
+//     },
+//   })
+//     .then((res) => {
+//       if (!res.ok) {
+//         throw new Error(`HTTP error! status: ${res.status}`);
+//       }
+//       return res.json();
+//     })
+//     .then((data) => {
+//       console.log("✅ Orders fetched successfully", data);
+//       setOrders(data);
+//     })
+//     .catch((err) => {
+//       console.error("❌ Fetch error:", err);
+//     })
+//     .finally(() => {
+//       setLoading(false);
+//     });
+// };
+
+//   useEffect(() => {
+//     fetchOrdersFromBackend();
+//     const interval = setInterval(fetchOrdersFromBackend, 10000); // refresh every 10s
+//     return () => clearInterval(interval);
+//   }, []);
+
+//   const exportToCSV = () => {
+//     const headers = [
+//       "Order ID",
+//       "Date",
+//       "Payment ID",
+//       "Total",
+//       "Item Count",
+//       "Item Details"
+//     ];
+
+//     const csv = [
+//       headers.join(","),
+//       ...orders.map((order) => {
+//         const items = order.items
+//           ?.map(
+//             (item: any) =>
+//               `${item.name} (${item.brand}) - ₹${item.price} x${item.quantity}`
+//           )
+//           .join(" | ");
+//         return [
+//           order.id,
+//           new Date(order.date).toLocaleString(),
+//           order.paymentId,
+//           order.total,
+//           order.items?.length || 0,
+//           `"${items}"`
+//         ].join(",");
+//       })
+//     ].join("\n");
+
+//     const blob = new Blob([csv], { type: "text/csv" });
+//     const url = URL.createObjectURL(blob);
+//     const link = document.createElement("a");
+//     link.href = url;
+//     link.download = "orders.csv";
+//     link.click();
+//   };
+
+//   if (loading) return <p>Loading...</p>;
+
+//   return (
+//     <div className="p-8">
+//       <div className="flex justify-between items-center mb-6">
+//         <h1 className="text-2xl font-bold">🧾 Admin Orders</h1>
+//         <Button onClick={exportToCSV}>
+//           <Download className="h-4 w-4 mr-2" /> Export
+//         </Button>
+//       </div>
+
+//       {orders.length === 0 ? (
+//         <p>No orders found.</p>
+//       ) : (
+//         <Table>
+//           <TableHeader>
+//             <TableRow>
+//               <TableHead>Order ID</TableHead>
+//               <TableHead>Date</TableHead>
+//               <TableHead>Payment ID</TableHead>
+//               <TableHead>Total</TableHead>
+//               <TableHead>Items</TableHead>
+//             </TableRow>
+//           </TableHeader>
+//           <TableBody>
+//             {orders.map((order) => (
+//               <TableRow key={order.id}>
+//                 <TableCell>{order.id}</TableCell>
+//                 <TableCell>{new Date(order.date).toLocaleString()}</TableCell>
+//                 <TableCell>{order.paymentId}</TableCell>
+//                 <TableCell>₹{order.total}</TableCell>
+//                 <TableCell>
+//                   {order.items?.map((item: any) => (
+//                     <div key={item.id} className="mb-2">
+//                       <div className="font-semibold">{item.name}</div>
+//                       <div className="text-sm text-gray-500">
+//                         Brand: {item.brand}
+//                       </div>
+//                       <div className="text-sm text-gray-500">
+//                         ₹{item.price} x {item.quantity}
+//                       </div>
+//                     </div>
+//                   ))}
+//                 </TableCell>
+//               </TableRow>
+//             ))}
+//           </TableBody>
+//         </Table>
+//       )}
+//     </div>
+//   );
+// }
+
+
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -410,43 +550,51 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow
+  TableRow,
 } from "@/components/ui/table";
 import { Download } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export default function AdminDashboard() {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   const fetchOrdersFromBackend = () => {
-  fetch("https://tds-solutions-backend.onrender.com/api/retrieve-orders", {
-    method: "GET", // ✅ Specify GET method
-    headers: {
-      "Accept": "application/json",         // ✅ Expecting JSON
-      "Content-Type": "application/json",   // ✅ Sending as JSON (even if no body, it's safe)
-    },
-  })
-    .then((res) => {
-      if (!res.ok) {
-        throw new Error(`HTTP error! status: ${res.status}`);
-      }
-      return res.json();
+    fetch("https://tds-solutions-backend.onrender.com/api/retrieve-orders", {
+      method: "GET",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+      },
     })
-    .then((data) => {
-      console.log("✅ Orders fetched successfully", data);
-      setOrders(data);
-    })
-    .catch((err) => {
-      console.error("❌ Fetch error:", err);
-    })
-    .finally(() => {
-      setLoading(false);
-    });
-};
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        return res.json();
+      })
+      .then((data) => {
+        console.log("✅ Orders fetched successfully", data);
+        setOrders(data);
+      })
+      .catch((err) => {
+        console.error("❌ Fetch error:", err);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  };
 
   useEffect(() => {
     fetchOrdersFromBackend();
-    const interval = setInterval(fetchOrdersFromBackend, 10000); // refresh every 10s
+    const interval = setInterval(fetchOrdersFromBackend, 10000);
     return () => clearInterval(interval);
   }, []);
 
@@ -456,8 +604,10 @@ export default function AdminDashboard() {
       "Date",
       "Payment ID",
       "Total",
+      "Customer Name",
+      "Customer Phone",
       "Item Count",
-      "Item Details"
+      "Item Details",
     ];
 
     const csv = [
@@ -474,68 +624,173 @@ export default function AdminDashboard() {
           new Date(order.date).toLocaleString(),
           order.paymentId,
           order.total,
+          order.userDetails?.name || "",
+          order.userDetails?.phone || "",
           order.items?.length || 0,
-          `"${items}"`
+          `"${items}"`,
         ].join(",");
-      })
+      }),
     ].join("\n");
 
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = "orders.csv";
+    link.download = `orders_${new Date().toISOString()}.csv`;
     link.click();
   };
 
-  if (loading) return <p>Loading...</p>;
+  const openOrderDetails = (order: any) => {
+    setSelectedOrder(order);
+    setDialogOpen(true);
+  };
+
+  if (loading) return <div className="p-8">Loading orders...</div>;
 
   return (
     <div className="p-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">🧾 Admin Orders</h1>
         <Button onClick={exportToCSV}>
-          <Download className="h-4 w-4 mr-2" /> Export
+          <Download className="h-4 w-4 mr-2" /> Export CSV
         </Button>
       </div>
 
       {orders.length === 0 ? (
         <p>No orders found.</p>
       ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Order ID</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>Payment ID</TableHead>
-              <TableHead>Total</TableHead>
-              <TableHead>Items</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {orders.map((order) => (
-              <TableRow key={order.id}>
-                <TableCell>{order.id}</TableCell>
-                <TableCell>{new Date(order.date).toLocaleString()}</TableCell>
-                <TableCell>{order.paymentId}</TableCell>
-                <TableCell>₹{order.total}</TableCell>
-                <TableCell>
-                  {order.items?.map((item: any) => (
-                    <div key={item.id} className="mb-2">
-                      <div className="font-semibold">{item.name}</div>
-                      <div className="text-sm text-gray-500">
-                        Brand: {item.brand}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        ₹{item.price} x {item.quantity}
+        <>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Order ID</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Customer</TableHead>
+                <TableHead>Total</TableHead>
+                <TableHead>Items</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {orders.map((order) => (
+                <TableRow 
+                  key={order.id} 
+                  onClick={() => openOrderDetails(order)}
+                  className="cursor-pointer hover:bg-gray-50"
+                >
+                  <TableCell className="font-medium">{order.id}</TableCell>
+                  <TableCell>
+                    {new Date(order.date).toLocaleString()}
+                  </TableCell>
+                  <TableCell>
+                    {order.userDetails?.name || "N/A"}
+                    <div className="text-sm text-gray-500">
+                      {order.userDetails?.phone || ""}
+                    </div>
+                  </TableCell>
+                  <TableCell>₹{order.total.toFixed(2)}</TableCell>
+                  <TableCell>
+                    {order.items?.length} item(s)
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+
+          {/* Order Details Dialog */}
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Order Details</DialogTitle>
+              </DialogHeader>
+              
+              {selectedOrder && (
+                <div className="space-y-6">
+                  {/* Order Summary */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <h3 className="font-semibold">Order Information</h3>
+                      <div className="space-y-1 mt-2 text-sm">
+                        <p><span className="text-muted-foreground">Order ID:</span> {selectedOrder.id}</p>
+                        <p><span className="text-muted-foreground">Date:</span> {new Date(selectedOrder.date).toLocaleString()}</p>
+                        <p><span className="text-muted-foreground">Payment ID:</span> {selectedOrder.paymentId}</p>
+                        <p><span className="text-muted-foreground">Status:</span> {selectedOrder.status || "Confirmed"}</p>
                       </div>
                     </div>
-                  ))}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+                    <div>
+                      <h3 className="font-semibold">Customer Details</h3>
+                      <div className="space-y-1 mt-2 text-sm">
+                        <p><span className="text-muted-foreground">Name:</span> {selectedOrder.userDetails?.name || "N/A"}</p>
+                        <p><span className="text-muted-foreground">Phone:</span> {selectedOrder.userDetails?.phone || "N/A"}</p>
+                        <p><span className="text-muted-foreground">Address:</span> {selectedOrder.userDetails?.address || "N/A"}</p>
+                        <p><span className="text-muted-foreground">Pincode:</span> {selectedOrder.userDetails?.pincode || "N/A"}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Order Items */}
+                  <div>
+                    <h3 className="font-semibold mb-3">Items ({selectedOrder.items?.length || 0})</h3>
+                    <div className="border rounded-lg">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Product</TableHead>
+                            <TableHead>Brand</TableHead>
+                            <TableHead>Price</TableHead>
+                            <TableHead>Qty</TableHead>
+                            <TableHead className="text-right">Total</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {selectedOrder.items?.map((item: any) => (
+                            <TableRow key={item.id}>
+                              <TableCell className="font-medium">
+                                <div className="flex items-center gap-3">
+                                  {item.image && (
+                                    <img 
+                                      src={item.image} 
+                                      alt={item.name}
+                                      className="w-10 h-10 object-cover rounded"
+                                    />
+                                  )}
+                                  {item.name}
+                                </div>
+                              </TableCell>
+                              <TableCell>{item.brand}</TableCell>
+                              <TableCell>₹{item.price.toFixed(2)}</TableCell>
+                              <TableCell>{item.quantity}</TableCell>
+                              <TableCell className="text-right">
+                                ₹{(item.price * item.quantity).toFixed(2)}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+
+                  {/* Order Total */}
+                  <div className="flex justify-end">
+                    <div className="w-64 space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Subtotal:</span>
+                        <span>₹{selectedOrder.total.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Shipping:</span>
+                        <span>FREE</span>
+                      </div>
+                      <div className="flex justify-between font-bold border-t pt-2">
+                        <span>Total:</span>
+                        <span>₹{selectedOrder.total.toFixed(2)}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
+        </>
       )}
     </div>
   );
