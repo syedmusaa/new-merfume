@@ -570,7 +570,7 @@ export default function AdminDashboard() {
     fetch("https://tds-solutions-backend.onrender.com/api/retrieve-orders", {
       method: "GET",
       headers: {
-        "Accept": "application/json",
+        Accept: "application/json",
         "Content-Type": "application/json",
       },
     })
@@ -582,7 +582,12 @@ export default function AdminDashboard() {
       })
       .then((data) => {
         console.log("✅ Orders fetched successfully", data);
-        setOrders(data);
+        if (Array.isArray(data.orders)) {
+          setOrders(data.orders);
+        } else {
+          console.error("Invalid response format: orders is not an array");
+          setOrders([]);
+        }
       })
       .catch((err) => {
         console.error("❌ Fetch error:", err);
@@ -620,12 +625,12 @@ export default function AdminDashboard() {
           )
           .join(" | ");
         return [
-          order.id,
-          new Date(order.date).toLocaleString(),
+          order.orderId,
+          new Date(order.orderDate).toLocaleString(),
           order.paymentId,
-          order.total,
-          order.userDetails?.name || "",
-          order.userDetails?.phone || "",
+          order.totalAmount,
+          order.customerDetails?.name || "",
+          order.customerDetails?.phone || "",
           order.items?.length || 0,
           `"${items}"`,
         ].join(",");
@@ -672,46 +677,42 @@ export default function AdminDashboard() {
             </TableHeader>
             <TableBody>
               {orders.map((order) => (
-                <TableRow 
-                  key={order.id} 
+                <TableRow
+                  key={order.orderId}
                   onClick={() => openOrderDetails(order)}
                   className="cursor-pointer hover:bg-gray-50"
                 >
-                  <TableCell className="font-medium">{order.id}</TableCell>
+                  <TableCell className="font-medium">{order.orderId}</TableCell>
                   <TableCell>
-                    {new Date(order.date).toLocaleString()}
+                    {new Date(order.orderDate).toLocaleString()}
                   </TableCell>
                   <TableCell>
-                    {order.userDetails?.name || "N/A"}
+                    {order.customerDetails?.name || "N/A"}
                     <div className="text-sm text-gray-500">
-                      {order.userDetails?.phone || ""}
+                      {order.customerDetails?.phone || ""}
                     </div>
                   </TableCell>
-                  <TableCell>₹{order.total.toFixed(2)}</TableCell>
-                  <TableCell>
-                    {order.items?.length} item(s)
-                  </TableCell>
+                  <TableCell>₹{order.totalAmount.toFixed(2)}</TableCell>
+                  <TableCell>{order.items?.length} item(s)</TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
 
-          {/* Order Details Dialog */}
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
                 <DialogTitle>Order Details</DialogTitle>
               </DialogHeader>
-              
+
               {selectedOrder && (
                 <div className="space-y-6">
-                  {/* Order Summary */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <h3 className="font-semibold">Order Information</h3>
                       <div className="space-y-1 mt-2 text-sm">
-                        <p><span className="text-muted-foreground">Order ID:</span> {selectedOrder.id}</p>
-                        <p><span className="text-muted-foreground">Date:</span> {new Date(selectedOrder.date).toLocaleString()}</p>
+                        <p><span className="text-muted-foreground">Order ID:</span> {selectedOrder.orderId}</p>
+                        <p><span className="text-muted-foreground">Date:</span> {new Date(selectedOrder.orderDate).toLocaleString()}</p>
                         <p><span className="text-muted-foreground">Payment ID:</span> {selectedOrder.paymentId}</p>
                         <p><span className="text-muted-foreground">Status:</span> {selectedOrder.status || "Confirmed"}</p>
                       </div>
@@ -719,15 +720,14 @@ export default function AdminDashboard() {
                     <div>
                       <h3 className="font-semibold">Customer Details</h3>
                       <div className="space-y-1 mt-2 text-sm">
-                        <p><span className="text-muted-foreground">Name:</span> {selectedOrder.userDetails?.name || "N/A"}</p>
-                        <p><span className="text-muted-foreground">Phone:</span> {selectedOrder.userDetails?.phone || "N/A"}</p>
-                        <p><span className="text-muted-foreground">Address:</span> {selectedOrder.userDetails?.address || "N/A"}</p>
-                        <p><span className="text-muted-foreground">Pincode:</span> {selectedOrder.userDetails?.pincode || "N/A"}</p>
+                        <p><span className="text-muted-foreground">Name:</span> {selectedOrder.customerDetails?.name || "N/A"}</p>
+                        <p><span className="text-muted-foreground">Phone:</span> {selectedOrder.customerDetails?.phone || "N/A"}</p>
+                        <p><span className="text-muted-foreground">Address:</span> {selectedOrder.customerDetails?.address || "N/A"}</p>
+                        <p><span className="text-muted-foreground">Pincode:</span> {selectedOrder.customerDetails?.pincode || "N/A"}</p>
                       </div>
                     </div>
                   </div>
 
-                  {/* Order Items */}
                   <div>
                     <h3 className="font-semibold mb-3">Items ({selectedOrder.items?.length || 0})</h3>
                     <div className="border rounded-lg">
@@ -747,8 +747,8 @@ export default function AdminDashboard() {
                               <TableCell className="font-medium">
                                 <div className="flex items-center gap-3">
                                   {item.image && (
-                                    <img 
-                                      src={item.image} 
+                                    <img
+                                      src={item.image}
                                       alt={item.name}
                                       className="w-10 h-10 object-cover rounded"
                                     />
@@ -769,12 +769,11 @@ export default function AdminDashboard() {
                     </div>
                   </div>
 
-                  {/* Order Total */}
                   <div className="flex justify-end">
                     <div className="w-64 space-y-2">
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Subtotal:</span>
-                        <span>₹{selectedOrder.total.toFixed(2)}</span>
+                        <span>₹{selectedOrder.totalAmount.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Shipping:</span>
@@ -782,7 +781,7 @@ export default function AdminDashboard() {
                       </div>
                       <div className="flex justify-between font-bold border-t pt-2">
                         <span>Total:</span>
-                        <span>₹{selectedOrder.total.toFixed(2)}</span>
+                        <span>₹{selectedOrder.totalAmount.toFixed(2)}</span>
                       </div>
                     </div>
                   </div>
