@@ -393,12 +393,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const [currentOrder, setCurrentOrder] = useState<Order | null>(null);
 
-  // Save cart to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('cart', JSON.stringify(cart));
   }, [cart]);
 
-  // Load current order from localStorage on initial render
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedOrder = localStorage.getItem('currentOrder');
@@ -409,16 +407,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-  const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const totalPrice = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   const addToCart = (item: Omit<CartItem, 'quantity'>) => {
     setCart(prevCart => {
-      const existingItem = prevCart.find(cartItem => cartItem.id === item.id);
+      const existingItem = prevCart.find(i => i.id === item.id);
       if (existingItem) {
-        return prevCart.map(cartItem =>
-          cartItem.id === item.id
-            ? { ...cartItem, quantity: cartItem.quantity + 1 }
-            : cartItem
+        return prevCart.map(i =>
+          i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
         );
       }
       return [...prevCart, { ...item, quantity: 1 }];
@@ -426,20 +422,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
   };
 
   const removeFromCart = (id: string) => {
-    setCart(prevCart => prevCart.filter(item => item.id !== id));
+    setCart(prev => prev.filter(item => item.id !== id));
   };
 
   const updateQuantity = (id: string, quantity: number) => {
     if (quantity < 1) {
       removeFromCart(id);
-      return;
+    } else {
+      setCart(prev =>
+        prev.map(item => (item.id === id ? { ...item, quantity } : item))
+      );
     }
-    
-    setCart(prevCart =>
-      prevCart.map(item =>
-        item.id === id ? { ...item, quantity } : item
-      )
-    );
   };
 
   const clearCart = () => {
@@ -447,70 +440,36 @@ export function CartProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('cart');
   };
 
-  const generateOrderId = () => {
-    return 'ORD-' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5).toUpperCase();
-  };
-
-  const loadRazorpayScript = (): Promise<boolean> => {
-    return new Promise((resolve) => {
-      const script = document.createElement('script');
-      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-      script.async = true;
-      script.onload = () => resolve(true);
-      script.onerror = () => resolve(false);
-      document.body.appendChild(script);
-    });
-  };
+  const generateOrderId = () =>
+    'ORD-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8).toUpperCase();
 
   const checkout = async (userDetails: UserDetails) => {
     try {
-      // 1. Load Razorpay script if not already loaded
-      if (!(window as any).Razorpay) {
-        const loaded = await loadRazorpayScript();
-        if (!loaded) {
-          throw new Error('Failed to load payment gateway');
-        }
-      }
-
-      // 2. Create order ID (you might want to generate this from your backend)
       const orderId = generateOrderId();
-
-      // 3. Prepare order details
       const order: Order = {
         id: orderId,
         date: new Date().toISOString(),
         items: [...cart],
         total: totalPrice,
-        paymentId: '', // Will be set after successful payment
+        paymentId: '',
         userDetails
       };
 
-      // 4. Initialize Razorpay options
       const options = {
-        key: 'rzp_test_E6f3s8PsZ5lTdu', // Replace with your Razorpay key
-        amount: totalPrice * 100, // Amount in paise
+        key: 'rzp_test_E6f3s8PsZ5lTdu',
+        amount: totalPrice * 100,
         currency: 'INR',
-        name: 'Your Store Name',
-        description: 'Order Payment',
-        order_id: orderId,
-        handler: async (response: any) => {
-          // Payment success handler
-          const paymentId = response.razorpay_payment_id;
-          
-          // Update order with payment ID
+        name: 'Merfume',
+        description: 'Luxury Fragrance Order',
+        handler: (response: any) => {
           const completedOrder: Order = {
             ...order,
-            paymentId
+            paymentId: response.razorpay_payment_id
           };
 
-          // Save to state and localStorage
           setCurrentOrder(completedOrder);
           localStorage.setItem('currentOrder', JSON.stringify(completedOrder));
-          
-          // Clear cart
           clearCart();
-          
-          // Redirect to success page
           window.location.href = '/success';
         },
         prefill: {
@@ -518,23 +477,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
           email: userDetails.email,
           contact: userDetails.phone
         },
-        theme: {
-          color: '#F37254'
-        },
-        modal: {
-          ondismiss: () => {
-            console.log('Payment modal dismissed');
-          }
-        }
+        theme: { color: '#D4AF37' }
       };
 
-      // 5. Open Razorpay payment modal
       const rzp = new (window as any).Razorpay(options);
       rzp.open();
-
-    } catch (error) {
-      console.error('Checkout error:', error);
-      alert('Payment failed. Please try again.');
+    } catch (err) {
+      console.error('Checkout error:', err);
+      alert('Something went wrong during checkout. Please try again.');
     }
   };
 
@@ -559,8 +509,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
 export function useCart() {
   const context = useContext(CartContext);
-  if (context === undefined) {
-    throw new Error('useCart must be used within a CartProvider');
-  }
+  if (!context) throw new Error('useCart must be used within a CartProvider');
   return context;
 }
