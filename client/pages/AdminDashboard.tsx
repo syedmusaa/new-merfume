@@ -552,7 +552,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Download } from "lucide-react";
+import { Download, RefreshCw } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -560,6 +560,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { orderDB } from "@/components/orderDB";
 
 export default function AdminDashboard() {
   const [orders, setOrders] = useState<any[]>([]);
@@ -567,45 +568,103 @@ export default function AdminDashboard() {
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
-  const fetchOrdersFromBackend = () => {
-    fetch("https://tds-solutions-backend.onrender.com/api/retrieve-orders", {
-      method: "GET",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-    })
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`);
+  const fetchAllOrders = async () => {
+    setLoading(true);
+    setFetchError(null);
+    
+    try {
+      // Try to get from backend first
+      let backendOrders = [];
+      try {
+        const backendResponse = await fetch(
+          "https://tds-solutions-backend.onrender.com/api/retrieve-orders",
+          {
+            method: "GET",
+            headers: {
+              Accept: "application/json",
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (backendResponse.ok) {
+          const data = await backendResponse.json();
+          backendOrders = Array.isArray(data.orders) ? data.orders : [];
         }
-        return res.json();
-      })
-      .then((data) => {
-        console.log("✅ Orders fetched successfully", data);
-        if (Array.isArray(data.orders)) {
-          setOrders(data.orders);
-        } else {
-          console.error("Invalid response format: orders is not an array");
-          setOrders([]);
-        }
-      })
-      .catch((err) => {
-        console.error("❌ Fetch error:", err);
-      })
-      .finally(() => {
-        setLoading(false);
+      } catch (backendErr) {
+        console.log("Backend fetch failed, using local data", backendErr);
+      }
+
+      // Get from IndexedDB
+      const localOrders = await orderDB.getAllOrders();
+
+      // Merge orders, preferring backend versions
+      const mergedOrdersMap = new Map();
+      
+      // Add local orders first
+      localOrders.forEach(order => {
+        mergedOrdersMap.set(order.orderId, order);
       });
+      
+      // Overwrite with backend orders if they exist
+      backendOrders.forEach(order => {
+        mergedOrdersMap.set(order.orderId, order);
+      });
+
+      // Convert to array and sort by date (newest first)
+      const mergedOrders = Array.from(mergedOrdersMap.values()).sort((a, b) => {
+        const dateA = new Date(a.orderDate || a.timestamp);
+        const dateB = new Date(b.orderDate || b.timestamp);
+        return dateB.getTime() - dateA.getTime();
+      });
+
+      setOrders(mergedOrders);
+    } catch (err) {
+      console.error("Error fetching orders:", err);
+      setFetchError("Failed to load orders. Showing local data only.");
+      try {
+        const localOrders = await orderDB.getAllOrders();
+        setOrders(localOrders);
+      } catch (localErr) {
+        console.error("Failed to get local orders:", localErr);
+        setFetchError("Failed to load both remote and local orders.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const syncOrders = async () => {
+    try {
+      const localOrders = await orderDB.getAllOrders();
+      const response = await fetch(
+        "https://tds-solutions-backend.onrender.com/api/sync-orders",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(localOrders),
+        }
+      );
+
+      if (!response.ok) throw new Error("Sync failed");
+      
+      await fetchAllOrders(); // Refresh the list
+    } catch (err) {
+      console.error("Sync error:", err);
+      setFetchError("Sync failed. Orders may not be updated on server.");
+    }
   };
 
   useEffect(() => {
-    fetchOrdersFromBackend();
-    const interval = setInterval(fetchOrdersFromBackend, 10000);
+    fetchAllOrders();
+    const interval = setInterval(fetchAllOrders, 30000); // Refresh every 30 seconds
     return () => clearInterval(interval);
   }, []);
 
-    // 🔍 Filter logic
   const filteredOrders = orders.filter((order) => {
     const q = searchQuery.toLowerCase();
     return (
@@ -669,7 +728,8 @@ export default function AdminDashboard() {
     <div className="p-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">🧾 Admin Orders</h1>
-         <Input
+        <div className="flex items-center gap-4">
+          <Input
             placeholder="Search orders..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -678,8 +738,17 @@ export default function AdminDashboard() {
           <Button onClick={exportToCSV}>
             <Download className="h-4 w-4 mr-2" /> Export CSV
           </Button>
+          <Button onClick={syncOrders} variant="outline">
+            <RefreshCw className="h-4 w-4 mr-2" /> Sync
+          </Button>
+        </div>
       </div>
 
+      {fetchError && (
+        <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-4">
+          <p>{fetchError}</p>
+        </div>
+      )}
       {filteredOrders.length === 0 ?(
         <p>No orders found.</p>
       ) : (

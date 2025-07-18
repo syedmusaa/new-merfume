@@ -57,6 +57,7 @@ import Cart from "./pages/Cart";
 import NotFound from "./pages/NotFound";
 import Success from "./pages/Success";
 import AdminDashboard from "./pages/AdminDashboard";
+import CustomerDashboard from "./pages/CustomerDashboard";
 import OrderDetail from "./pages/OrderDetail";
 import AdminLogin from "./pages/AdminLogin";
 
@@ -78,6 +79,7 @@ const App = () => (
             <Route path="/cart" element={<Cart />} />
             <Route path="/success" element={<Success />} />
             <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/customer-dashboard" element={<CustomerDashboard />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin/orders/:orderId" element={<OrderDetail />} />
             <Route path="*" element={<NotFound />} />

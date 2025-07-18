@@ -83,6 +83,9 @@ export default defineConfig({
     outDir: '../dist', // 👈 build goes outside of /client
     emptyOutDir: true,
   },
+  server: {
+    port: 8080, // 👈 change dev server port to 8080
+  },
   plugins: [react()],
   resolve: {
     alias: {
