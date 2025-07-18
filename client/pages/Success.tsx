@@ -445,12 +445,21 @@ export default function Success() {
   const navigate = useNavigate();
 
   useEffect(() => {
+  const savedOrder = localStorage.getItem("currentOrder");
+
+  if (!savedOrder) {
+    navigate("/store");
+    return;
+  }
+
+  const parsedOrder: Order = JSON.parse(savedOrder);
+  setOrder(parsedOrder); // SET ORDER HERE FIRST
+  setIsLoading(false);   // SET LOADING FALSE HERE FIRST
+
   const interval = setInterval(() => {
     const savedOrder = localStorage.getItem("currentOrder");
 
-    if (!savedOrder) {
-      return; // No order found, do nothing
-    }
+    if (!savedOrder) return;
 
     try {
       const parsedOrder: Order = JSON.parse(savedOrder);
@@ -491,20 +500,21 @@ export default function Success() {
           console.log("✅ Order sent to backend:", data);
           localStorage.removeItem("cart");
           localStorage.removeItem("currentOrder");
+          clearInterval(interval); // STOP THE LOOP ON SUCCESS
         })
         .catch((err) => {
           console.error("❌ Order submission failed:", err);
+          setError("Order was placed but not confirmed. Please contact support.");
         });
 
     } catch (err) {
       console.error("❌ Failed to parse order:", err);
+      setError("Invalid order data. Please contact support.");
     }
-  }, 10000); // Run every 10 seconds
+  }, 10000); // every 10 seconds
 
-  // Cleanup on component unmount
   return () => clearInterval(interval);
-}, []);
-
+}, [navigate]);
 
   const downloadReceipt = () => {
     if (!order) return;
