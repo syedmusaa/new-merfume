@@ -559,12 +559,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 export default function AdminDashboard() {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const fetchOrdersFromBackend = () => {
     fetch("https://tds-solutions-backend.onrender.com/api/retrieve-orders", {
@@ -602,6 +604,17 @@ export default function AdminDashboard() {
     const interval = setInterval(fetchOrdersFromBackend, 10000);
     return () => clearInterval(interval);
   }, []);
+
+    // 🔍 Filter logic
+  const filteredOrders = orders.filter((order) => {
+    const q = searchQuery.toLowerCase();
+    return (
+      order.orderId.toLowerCase().includes(q) ||
+      order.paymentId?.toLowerCase().includes(q) ||
+      order.customerDetails?.name?.toLowerCase().includes(q) ||
+      order.customerDetails?.phone?.includes(q)
+    );
+  });
 
   const exportToCSV = () => {
     const headers = [
@@ -656,12 +669,18 @@ export default function AdminDashboard() {
     <div className="p-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">🧾 Admin Orders</h1>
-        <Button onClick={exportToCSV}>
-          <Download className="h-4 w-4 mr-2" /> Export CSV
-        </Button>
+         <Input
+            placeholder="Search orders..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="md:w-72"
+          />
+          <Button onClick={exportToCSV}>
+            <Download className="h-4 w-4 mr-2" /> Export CSV
+          </Button>
       </div>
 
-      {orders.length === 0 ? (
+      {filteredOrders.length === 0 ?(
         <p>No orders found.</p>
       ) : (
         <>
