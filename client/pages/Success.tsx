@@ -445,19 +445,16 @@ export default function Success() {
   const navigate = useNavigate();
 
   useEffect(() => {
+  const interval = setInterval(() => {
     const savedOrder = localStorage.getItem("currentOrder");
 
     if (!savedOrder) {
-      navigate("/store");
-      return;
+      return; // No order found, do nothing
     }
 
     try {
       const parsedOrder: Order = JSON.parse(savedOrder);
-      setOrder(parsedOrder);
-      setIsLoading(false);
 
-      // Prepare complete order data for backend
       const backendOrderData = {
         orderId: parsedOrder.id,
         orderDate: parsedOrder.date,
@@ -476,7 +473,6 @@ export default function Success() {
         timestamp: new Date().toISOString()
       };
 
-      // Send order to backend
       fetch("https://tds-solutions-backend.onrender.com/api/send-orders", {
         method: "POST",
         headers: {
@@ -493,21 +489,22 @@ export default function Success() {
         })
         .then((data) => {
           console.log("✅ Order sent to backend:", data);
-          // Clear cart and temporary order after successful submission
           localStorage.removeItem("cart");
           localStorage.removeItem("currentOrder");
         })
         .catch((err) => {
           console.error("❌ Order submission failed:", err);
-          setError("Order submitted but confirmation failed. Please contact support.");
         });
 
     } catch (err) {
       console.error("❌ Failed to parse order:", err);
-      setError("Invalid order data. Please contact support.");
-      setIsLoading(false);
     }
-  }, [navigate]);
+  }, 10000); // Run every 10 seconds
+
+  // Cleanup on component unmount
+  return () => clearInterval(interval);
+}, []);
+
 
   const downloadReceipt = () => {
     if (!order) return;
