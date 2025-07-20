@@ -746,28 +746,28 @@ interface Product {
   productCategory: string;
 }
 
-// Fetch function with dynamic base URL from .env
 export async function fetchProducts(): Promise<Product[]> {
   try {
-    const response = await fetch(
-      `https://be2954fd148c.ngrok-free.app/api/products/all`,
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    const response = await fetch('https://be2954fd148c.ngrok-free.app/api/products/all', {
+      headers: {
+    'Content-Type': 'application/json',
+    'ngrok-skip-browser-warning': '69420' // यह ngrok के ब्राउज़र वार्निंग को स्किप करेगा
+  }
+    });
 
     const contentType = response.headers.get("content-type");
+
+    // Check if response is actually JSON
     if (!response.ok || !contentType?.includes("application/json")) {
       const text = await response.text();
       console.error("Non-JSON response from server:", text);
-      toast.error("Unexpected server response.");
+      toast.error("Unexpected server response while fetching products.");
       return [];
     }
 
     const data: Product[] = await response.json();
     return data;
+
   } catch (error) {
     console.error("Error fetching products:", error);
     toast.error("Failed to load products.");
@@ -786,10 +786,16 @@ export default function Store() {
   useEffect(() => {
     const loadProducts = async () => {
       setIsLoading(true);
-      const data = await fetchProducts();
-      setProducts(data);
-      setIsLoading(false);
+      try {
+        const data = await fetchProducts();
+        setProducts(data);
+      } catch (error) {
+        console.error("Error loading products:", error);
+      } finally {
+        setIsLoading(false);
+      }
     };
+    
     loadProducts();
   }, []);
 
@@ -798,8 +804,7 @@ export default function Store() {
       product.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.brand.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory =
-      selectedCategory === "all" ||
-      product.productCategory.toLowerCase() === selectedCategory;
+      selectedCategory === "all" || product.productCategory === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
@@ -825,6 +830,21 @@ export default function Store() {
         : [...prev, productId]
     );
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {[...Array(8)].map((_, index) => (
+              <div key={index} className="animate-pulse h-96 bg-muted rounded-lg" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -930,6 +950,104 @@ export default function Store() {
           )}
         </div>
       </section>
+
+      <footer className="bg-luxury-black text-cream py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div className="col-span-1 md:col-span-2">
+              <img
+                src="https://cdn.builder.io/api/v1/assets/df01e345c2d146ff8c27b0570e833c11/merfume-logo-74e35c?format=webp&width=800"
+                alt="Merfume"
+                className="h-20 w-auto mb-4 brightness-110"
+              />
+              <p className="text-cream/80 max-w-md leading-relaxed">
+                Explore our complete collection of luxury fragrances crafted
+                with love and precision. Each scent tells a unique story.
+              </p>
+            </div>
+            <div>
+              <h3 className="text-gold font-semibold mb-4">Categories</h3>
+              <ul className="space-y-2">
+                <li>
+                  <button
+                    onClick={() => setSelectedCategory("fresh")}
+                    className="text-cream/80 hover:text-gold transition-colors text-left"
+                  >
+                    Fresh
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => setSelectedCategory("floral")}
+                    className="text-cream/80 hover:text-gold transition-colors text-left"
+                  >
+                    Floral
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => setSelectedCategory("luxury")}
+                    className="text-cream/80 hover:text-gold transition-colors text-left"
+                  >
+                    Luxury
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => setSelectedCategory("evening")}
+                    className="text-cream/80 hover:text-gold transition-colors text-left"
+                  >
+                    Evening
+                  </button>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-gold font-semibold mb-4">Customer Care</h3>
+              <ul className="space-y-2">
+                <li>
+                  <a
+                    href="#"
+                    className="text-cream/80 hover:text-gold transition-colors"
+                  >
+                    Size Guide
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    className="text-cream/80 hover:text-gold transition-colors"
+                  >
+                    Fragrance Care
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    className="text-cream/80 hover:text-gold transition-colors"
+                  >
+                    Returns
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="/contact"
+                    className="text-cream/80 hover:text-gold transition-colors"
+                  >
+                    Contact Us
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div className="border-t border-cream/20 mt-12 pt-8 text-center">
+            <p className="text-cream/60">
+              © 2024 Merfume. All rights reserved. Discover your signature
+              scent.
+            </p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
