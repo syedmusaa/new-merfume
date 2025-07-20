@@ -750,7 +750,7 @@ interface Product {
 export async function fetchProducts(): Promise<Product[]> {
   try {
     const response = await fetch(
-      `https://3029ebe32b64.ngrok-free.app/api/products/all`,
+      `https://502eb3efb59a.ngrok-free.app/api/products/all`,
       {
         headers: {
           "Content-Type": "application/json",
