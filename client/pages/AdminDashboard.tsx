@@ -981,6 +981,7 @@ export default function AdminDashboard() {
       formData.append("backImage", backImage);
 
       const response = await fetch("https://3029ebe32b64.ngrok-free.app/api/products/add", {
+      
         method: "POST",
         body: formData,
       });

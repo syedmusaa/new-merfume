@@ -746,16 +746,30 @@ interface Product {
   productCategory: string;
 }
 
-async function fetchProducts(): Promise<Product[]> {
+export async function fetchProducts(): Promise<Product[]> {
   try {
-    const response = await fetch('https://3029ebe32b64.ngrok-free.app/api/products/all');
-    if (!response.ok) {
-      throw new Error('Failed to fetch products');
+    const response = await fetch('https://3029ebe32b64.ngrok-free.app/api/products/all', {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const contentType = response.headers.get("content-type");
+
+    // Check if response is actually JSON
+    if (!response.ok || !contentType?.includes("application/json")) {
+      const text = await response.text();
+      console.error("Non-JSON response from server:", text);
+      toast.error("Unexpected server response while fetching products.");
+      return [];
     }
-    return await response.json();
+
+    const data: Product[] = await response.json();
+    return data;
+
   } catch (error) {
-    console.error('Error fetching products:', error);
-    toast.error('Failed to load products');
+    console.error("Error fetching products:", error);
+    toast.error("Failed to load products.");
     return [];
   }
 }
