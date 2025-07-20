@@ -910,7 +910,7 @@ export default function AdminDashboard() {
   const { toast } = useToast();
 
   const fetchOrdersFromBackend = () => {
-    fetch("https://3029ebe32b64.ngrok-free.app/api/orders/admin/all-orders", {
+    fetch("https://be2954fd148c.ngrok-free.app/api/orders/admin/all-orders", {
       method: "GET",
       headers: {
         Accept: "application/json",
