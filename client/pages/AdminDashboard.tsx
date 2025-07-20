@@ -980,7 +980,7 @@ export default function AdminDashboard() {
       formData.append("frontImage", frontImage);
       formData.append("backImage", backImage);
 
-      const response = await fetch("https://3029ebe32b64.ngrok-free.app/api/products/add", {
+      const response = await fetch("https://be2954fd148c.ngrok-free.app/api/products/add", {
       
         method: "POST",
         body: formData,
