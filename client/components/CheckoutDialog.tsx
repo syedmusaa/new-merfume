@@ -540,9 +540,10 @@ export default function CheckoutDialog({
 
       const response = await fetch("https://3029ebe32b64.ngrok-free.app/api/orders/create", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
+         headers: {
+    'Content-Type': 'application/json',
+    'ngrok-skip-browser-warning': '69420' // यह ngrok के ब्राउज़र वार्निंग को स्किप करेगा
+  },
         body: JSON.stringify(payload)
       });
 

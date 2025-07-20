@@ -256,6 +256,7 @@ export default function ProductCard({
       headers: {
         "Content-Type": "application/json",
         "Cart-Token": cartToken,
+        'ngrok-skip-browser-warning': '69420'
       },
       body: JSON.stringify({
         productId,

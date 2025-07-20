@@ -913,9 +913,9 @@ export default function AdminDashboard() {
     fetch("https://be2954fd148c.ngrok-free.app/api/orders/admin/all-orders", {
       method: "GET",
       headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
+    'Content-Type': 'application/json',
+    'ngrok-skip-browser-warning': '69420' // यह ngrok के ब्राउज़र वार्निंग को स्किप करेगा
+  }
     })
       .then((res) => {
         if (!res.ok) {

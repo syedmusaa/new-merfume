@@ -418,7 +418,9 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     try {
       const response = await fetch('https://3029ebe32b64.ngrok-free.app/api/cart/items', {
         headers: {
+          'Content-Type': 'application/json',
           'Cart-Token': cartToken,
+          'ngrok-skip-browser-warning': '69420'
         },
       });
 
@@ -440,6 +442,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       method: 'DELETE',
       headers: {
         'Cart-Token': cartToken,
+        'ngrok-skip-browser-warning': '69420'
       },
     });
 
@@ -467,6 +470,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
           method: 'PUT',
           headers: {
             'Cart-Token': cartToken,
+            'ngrok-skip-browser-warning': '69420'
           },
         }
       );
@@ -490,6 +494,7 @@ const clearCart = async () => {
       method: 'DELETE',
       headers: {
         'Cart-Token': cartToken,
+        'ngrok-skip-browser-warning': '69420'
       },
     });
 
@@ -513,6 +518,7 @@ const clearCart = async () => {
         headers: {
           'Content-Type': 'application/json',
           'Cart-Token': cartToken,
+          'ngrok-skip-browser-warning': '69420'
         },
         body: JSON.stringify({
           userDetails,
