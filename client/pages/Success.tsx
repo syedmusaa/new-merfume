@@ -408,14 +408,15 @@ import { Link, useNavigate } from "react-router-dom";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import Navigation from "@/components/Navigation";
+import { toast } from "sonner";
 
 interface OrderItem {
-  id: string;
-  name: string;
+  productId: number;
+  productName: string;
   brand: string;
-  price: number;
+  productPrice: number;
   quantity: number;
-  image: string;
+  productImageUrl: string;
 }
 
 interface UserDetails {
@@ -431,6 +432,7 @@ interface UserDetails {
 
 interface Order {
   id: string;
+  orderNumber: string;
   date: string;
   items: OrderItem[];
   total: number;
@@ -445,76 +447,31 @@ export default function Success() {
   const navigate = useNavigate();
 
   useEffect(() => {
-  const savedOrder = localStorage.getItem("currentOrder");
-
-  if (!savedOrder) {
-    navigate("/store");
-    return;
-  }
-
-  const parsedOrder: Order = JSON.parse(savedOrder);
-  setOrder(parsedOrder); // SET ORDER HERE FIRST
-  setIsLoading(false);   // SET LOADING FALSE HERE FIRST
-
-  const interval = setInterval(() => {
     const savedOrder = localStorage.getItem("currentOrder");
 
-    if (!savedOrder) return;
+    if (!savedOrder) {
+      navigate("/success");
+      return;
+    }
 
     try {
       const parsedOrder: Order = JSON.parse(savedOrder);
+      
+      if (!parsedOrder.id || !parsedOrder.items || !parsedOrder.userDetails) {
+        throw new Error("Invalid order data");
+      }
 
-      const backendOrderData = {
-        orderId: parsedOrder.id,
-        orderDate: parsedOrder.date,
-        items: parsedOrder.items.map(item => ({
-          productId: item.id,
-          name: item.name,
-          brand: item.brand,
-          price: item.price,
-          quantity: item.quantity,
-          image: item.image
-        })),
-        totalAmount: parsedOrder.total,
-        paymentId: parsedOrder.paymentId,
-        customerDetails: parsedOrder.userDetails,
-        status: "confirmed",
-        timestamp: new Date().toISOString()
-      };
-
-      fetch("https://tds-solutions-backend.onrender.com/api/send-orders", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(backendOrderData),
-      })
-        .then(async (res) => {
-          if (!res.ok) {
-            const errorData = await res.json();
-            throw new Error(errorData.message || "Failed to send order");
-          }
-          return res.json();
-        })
-        .then((data) => {
-          console.log("✅ Order sent to backend:", data);
-          localStorage.removeItem("cart");
-          localStorage.removeItem("currentOrder");
-          clearInterval(interval); // STOP THE LOOP ON SUCCESS
-        })
-        .catch((err) => {
-          console.error("❌ Order submission failed:", err);
-          setError("Order was placed but not confirmed. Please contact support.");
-        });
-
+      setOrder(parsedOrder);
+      setIsLoading(false);
+      
+      // Clear local storage after showing the order
+      localStorage.removeItem("currentOrder");
     } catch (err) {
-      console.error("❌ Failed to parse order:", err);
+      console.error('Error parsing order:', err);
       setError("Invalid order data. Please contact support.");
+      setIsLoading(false);
     }
-  }, 10000); // every 10 seconds
-
-  return () => clearInterval(interval);
-}, [navigate]);
+  }, [navigate]);
 
   const downloadReceipt = () => {
     if (!order) return;
@@ -533,12 +490,12 @@ export default function Success() {
         const imgHeight = (canvas.height * imgWidth) / canvas.width;
         
         pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
-        pdf.save(`receipt_${order.id}.pdf`);
+        pdf.save(`receipt_${order.orderNumber}.pdf`);
         setIsLoading(false);
       }).catch((err) => {
         console.error("Failed to generate PDF:", err);
         setIsLoading(false);
-        alert("Failed to generate receipt. Please try again.");
+        toast.error("Failed to generate receipt. Please try again.");
       });
     }
   };
@@ -625,13 +582,13 @@ export default function Success() {
           </div>
           <h1 className="text-3xl font-bold mb-2">Order Confirmed!</h1>
           <p className="text-muted-foreground">
-            Your order #{order.id} has been placed successfully
+            Your order #{order.orderNumber} has been placed successfully
           </p>
           <p className="text-sm text-muted-foreground mt-2">
-            A confirmation has been sent to your email
+            A confirmation has been sent to {order.userDetails.email}
           </p>
         </div>
-
+        
         {/* Receipt Section */}
         <div
           id="receipt"
@@ -640,12 +597,14 @@ export default function Success() {
           <div className="flex justify-between items-start mb-6">
             <div>
               <h2 className="text-xl font-bold">Merfume</h2>
-              <p className="text-sm text-muted-foreground">Order #{order.id}</p>
+              <p className="text-sm text-muted-foreground">Order #{order.orderNumber}</p>
               <p className="text-sm text-muted-foreground">
                 {new Date(order.date).toLocaleDateString("en-US", {
                   year: "numeric",
                   month: "long",
                   day: "numeric",
+                  hour: '2-digit',
+                  minute: '2-digit'
                 })}
               </p>
             </div>
@@ -657,24 +616,24 @@ export default function Success() {
 
           {/* Order Items */}
           <div className="border-t border-b border-border/25 py-4 my-4">
-            {order.items.map((item) => (
+            {order.items.map((item, index) => (
               <div
-                key={item.id}
+                key={`${item.productId}-${index}`}
                 className="flex justify-between items-center mb-4 last:mb-0"
               >
                 <div className="flex items-center gap-4">
                   <img
-                    src={item.image}
-                    alt={item.name}
+                    src={item.productImageUrl}
+                    alt={item.productName}
                     className="w-12 h-12 object-cover rounded"
                   />
                   <div>
-                    <p className="font-medium">{item.name}</p>
+                    <p className="font-medium">{item.productName}</p>
                     <p className="text-sm text-muted-foreground">{item.brand}</p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p>${item.price.toFixed(2)}</p>
+                  <p>₹{item.productPrice.toFixed(2)}</p>
                   <p className="text-sm text-muted-foreground">
                     Qty: {item.quantity}
                   </p>
@@ -687,7 +646,7 @@ export default function Success() {
           <div className="space-y-2 mb-6">
             <div className="flex justify-between">
               <span>Subtotal</span>
-              <span>${order.total.toFixed(2)}</span>
+              <span>₹{order.total.toFixed(2)}</span>
             </div>
             <div className="flex justify-between">
               <span>Shipping</span>
@@ -695,7 +654,7 @@ export default function Success() {
             </div>
             <div className="flex justify-between font-bold text-lg pt-2">
               <span>Total</span>
-              <span className="text-gold">${order.total.toFixed(2)}</span>
+              <span className="text-gold">₹{order.total.toFixed(2)}</span>
             </div>
           </div>
 
@@ -711,6 +670,10 @@ export default function Success() {
                 <p className="text-sm text-muted-foreground">Phone</p>
                 <p>{order.userDetails.phone}</p>
               </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Email</p>
+                <p>{order.userDetails.email}</p>
+              </div>
               <div className="md:col-span-2">
                 <p className="text-sm text-muted-foreground">Address</p>
                 <p>{order.userDetails.address}</p>
@@ -723,12 +686,10 @@ export default function Success() {
                 <p className="text-sm text-muted-foreground">City</p>
                 <p>{order.userDetails.city || "-"}</p>
               </div>
-              {order.userDetails.state && (
-                <div>
-                  <p className="text-sm text-muted-foreground">State</p>
-                  <p>{order.userDetails.state}</p>
-                </div>
-              )}
+              <div>
+                <p className="text-sm text-muted-foreground">State</p>
+                <p>{order.userDetails.state || "-"}</p>
+              </div>
               <div>
                 <p className="text-sm text-muted-foreground">Country</p>
                 <p>{order.userDetails.country || "India"}</p>

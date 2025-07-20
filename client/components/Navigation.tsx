@@ -2,11 +2,13 @@ import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ShoppingCart, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useCart } from "@/components/CartContext";
 
 export default function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const { totalItems } = useCart();
 
   // ✅ Redirect to /admin if admin login data exists in localStorage
   useEffect(() => {
@@ -61,19 +63,19 @@ export default function Navigation() {
 
           {/* Cart and Mobile Menu */}
           <div className="flex items-center space-x-4">
-            <Link to="/cart">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="relative hover:text-gold"
-              >
-                <ShoppingCart className="h-5 w-5" />
-                <span className="absolute -top-2 -right-2 bg-gold text-gold-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  0
-                </span>
-              </Button>
-            </Link>
-
+        <Link to="/cart">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="relative hover:text-gold"
+          >
+            <ShoppingCart className="h-5 w-5" />
+            <span className="absolute -top-2 -right-2 bg-gold text-gold-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
+              {totalItems} {/* Use totalItems from cart context */}
+            </span>
+          </Button>
+        </Link>
+        
             {/* Mobile menu button */}
             <div className="md:hidden">
               <Button

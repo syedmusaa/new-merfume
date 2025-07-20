@@ -337,15 +337,17 @@
 //   );
 // }
 
-import { createContext, useContext, ReactNode, useState, useEffect } from 'react';
+import { createContext, useContext, ReactNode, useState, useEffect, useCallback } from 'react';
+import { toast } from 'sonner';
 
 interface CartItem {
-  id: string;
-  name: string;
+  cartId: number;
+  productId: number;
+  productName: string;
   brand: string;
-  price: number;
+  productPrice: number;
   quantity: number;
-  image: string;
+  productImageUrl: string;
 }
 
 interface UserDetails {
@@ -370,145 +372,235 @@ interface Order {
 
 interface CartContextType {
   cart: CartItem[];
-  addToCart: (item: Omit<CartItem, 'quantity'>) => void;
-  removeFromCart: (id: string) => void;
-  updateQuantity: (id: string, quantity: number) => void;
+  cartToken: string | null;
   totalItems: number;
   totalPrice: number;
+  fetchCartItems: () => Promise<void>;
+  removeFromCart: (cartId: number) => Promise<void>;
+  updateQuantity: (itemId: number, quantity: number) => Promise<void>;
+  clearCart: () => Promise<void>;
   checkout: (userDetails: UserDetails) => Promise<void>;
-  clearCart: () => void;
   currentOrder: Order | null;
 }
 
-const CartContext = createContext<CartContextType | undefined>(undefined);
+const CartContext = createContext<CartContextType>({
+  cart: [],
+  cartToken: null,
+  totalItems: 0,
+  totalPrice: 0,
+  fetchCartItems: async () => {},
+  removeFromCart: async () => {},
+  updateQuantity: async () => {},
+  clearCart: async () => {},
+  checkout: async () => {},
+  currentOrder: null,
+});
 
-export function CartProvider({ children }: { children: ReactNode }) {
-  const [cart, setCart] = useState<CartItem[]>(() => {
-    if (typeof window !== 'undefined') {
-      const savedCart = localStorage.getItem('cart');
-      return savedCart ? JSON.parse(savedCart) : [];
-    }
-    return [];
-  });
-
+export const CartProvider = ({ children }: { children: ReactNode }) => {
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [cartToken, setCartToken] = useState<string | null>(null);
   const [currentOrder, setCurrentOrder] = useState<Order | null>(null);
 
+  // Initialize cart token from localStorage or generate a new one
   useEffect(() => {
-    localStorage.setItem('cart', JSON.stringify(cart));
-  }, [cart]);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedOrder = localStorage.getItem('currentOrder');
-      if (savedOrder) {
-        setCurrentOrder(JSON.parse(savedOrder));
-      }
-    }
+    const token = localStorage.getItem('cartToken') || generateCartToken();
+    setCartToken(token);
+    localStorage.setItem('cartToken', token);
   }, []);
 
-  const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-  const totalPrice = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const generateCartToken = () => {
+    return 'cart-' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+  };
 
-  const addToCart = (item: Omit<CartItem, 'quantity'>) => {
-    setCart(prevCart => {
-      const existingItem = prevCart.find(i => i.id === item.id);
-      if (existingItem) {
-        return prevCart.map(i =>
-          i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
-        );
-      }
-      return [...prevCart, { ...item, quantity: 1 }];
+  const fetchCartItems = useCallback(async () => {
+    if (!cartToken) return;
+
+    try {
+      const response = await fetch('https://3029ebe32b64.ngrok-free.app/api/cart/items', {
+        headers: {
+          'Cart-Token': cartToken,
+        },
+      });
+
+      if (!response.ok) throw new Error('Failed to fetch cart items');
+
+      const data = await response.json();
+      setCart(data);
+    } catch (error) {
+      console.error('Error fetching cart items:', error);
+      toast.error('Failed to load cart items');
+    }
+  }, [cartToken]);
+
+  const removeFromCart = async (cartId: number) => {
+  if (!cartToken) return;
+
+  try {
+    const response = await fetch(`https://3029ebe32b64.ngrok-free.app/api/cart/remove/${cartId}`, {
+      method: 'DELETE',
+      headers: {
+        'Cart-Token': cartToken,
+      },
     });
-  };
 
-  const removeFromCart = (id: string) => {
-    setCart(prev => prev.filter(item => item.id !== id));
-  };
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to remove item from cart');
+    }
 
-  const updateQuantity = (id: string, quantity: number) => {
-    if (quantity < 1) {
-      removeFromCart(id);
-    } else {
-      setCart(prev =>
-        prev.map(item => (item.id === id ? { ...item, quantity } : item))
+    await fetchCartItems();
+    toast.success('Item removed from cart');
+  } catch (error: any) {
+    console.error('Error removing from cart:', error);
+    toast.error(error.message || 'Failed to remove item from cart');
+  }
+};
+
+  const updateQuantity = async (itemId: number, quantity: number) => {
+    if (!cartToken) return;
+    if (quantity < 1) return;
+
+    try {
+      const response = await fetch(
+        `https://3029ebe32b64.ngrok-free.app/api/cart/update/${itemId}?quantity=${quantity}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Cart-Token': cartToken,
+          },
+        }
       );
+
+      if (!response.ok) throw new Error('Failed to update quantity');
+
+      await fetchCartItems();
+      toast.success('Quantity updated');
+    } catch (error) {
+      console.error('Error updating quantity:', error);
+      toast.error('Failed to update quantity');
     }
   };
 
-  const clearCart = () => {
-    setCart([]);
-    localStorage.removeItem('cart');
-  };
+  // Update clearCart
+const clearCart = async () => {
+  if (!cartToken) return;
 
-  const generateOrderId = () =>
-    'ORD-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8).toUpperCase();
+  try {
+    const response = await fetch('https://3029ebe32b64.ngrok-free.app/api/cart/clear', {
+      method: 'DELETE',
+      headers: {
+        'Cart-Token': cartToken,
+      },
+    });
+
+    if (!response.ok) throw new Error('Failed to clear cart');
+
+    await fetchCartItems();
+    toast.success('Cart cleared');
+  } catch (error) {
+    console.error('Error clearing cart:', error);
+    toast.error('Failed to clear cart');
+  }
+};
 
   const checkout = async (userDetails: UserDetails) => {
+    if (!cartToken || cart.length === 0) return;
+
     try {
-      const orderId = generateOrderId();
-      const order: Order = {
-        id: orderId,
-        date: new Date().toISOString(),
-        items: [...cart],
-        total: totalPrice,
-        paymentId: '',
-        userDetails
-      };
-
-      const options = {
-        key: 'rzp_test_E6f3s8PsZ5lTdu',
-        amount: totalPrice * 100,
-        currency: 'INR',
-        name: 'Merfume',
-        description: 'Luxury Fragrance Order',
-        handler: (response: any) => {
-          const completedOrder: Order = {
-            ...order,
-            paymentId: response.razorpay_payment_id
-          };
-
-          setCurrentOrder(completedOrder);
-          localStorage.setItem('currentOrder', JSON.stringify(completedOrder));
-          clearCart();
-          window.location.href = '/success';
+      // First create the order in your backend
+      const orderResponse = await fetch('https://3029ebe32b64.ngrok-free.app/api/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Cart-Token': cartToken,
         },
-        prefill: {
-          name: userDetails.name,
-          email: userDetails.email,
-          contact: userDetails.phone
-        },
-        theme: { color: '#D4AF37' }
-      };
+        body: JSON.stringify({
+          userDetails,
+          items: cart,
+        }),
+      });
 
-      const rzp = new (window as any).Razorpay(options);
-      rzp.open();
-    } catch (err) {
-      console.error('Checkout error:', err);
-      alert('Something went wrong during checkout. Please try again.');
+  //     if (!orderResponse.ok) throw new Error('Failed to create order');
+
+  //     const orderData = await orderResponse.json();
+
+  //     // Then initiate payment
+  //     const options = {
+  //       key: 'rzp_test_E6f3s8PsZ5lTdu',
+  //       amount: totalPrice * 100,
+  //       currency: 'INR',
+  //       name: 'Your Store',
+  //       description: 'Order Payment',
+  //       order_id: orderData.id,
+  //       handler: async (response: any) => {
+  //         // Verify payment on your backend
+  //         const paymentResponse = await fetch('http://localhost:8080/api/payments/verify', {
+  //           method: 'POST',
+  //           headers: {
+  //             'Content-Type': 'application/json',
+  //           },
+  //           body: JSON.stringify({
+  //             razorpay_payment_id: response.razorpay_payment_id,
+  //             razorpay_order_id: response.razorpay_order_id,
+  //             razorpay_signature: response.razorpay_signature,
+  //           }),
+  //         });
+
+  //         if (!paymentResponse.ok) throw new Error('Payment verification failed');
+
+  //         const completedOrder: Order = {
+  //           id: orderData.id,
+  //           date: new Date().toISOString(),
+  //           items: cart,
+  //           total: totalPrice,
+  //           paymentId: response.razorpay_payment_id,
+  //           userDetails,
+  //         };
+
+  //         setCurrentOrder(completedOrder);
+  //         localStorage.setItem('currentOrder', JSON.stringify(completedOrder));
+  //         await clearCart();
+  //         window.location.href = '/success';
+  //       },
+  //       prefill: {
+  //         name: userDetails.name,
+  //         email: userDetails.email,
+  //         contact: userDetails.phone,
+  //       },
+  //       theme: {
+  //         color: '#3399cc',
+  //       },
+  //     };
+
+  //     const rzp = new (window as any).Razorpay(options);
+  //     rzp.open();
+    } catch (error) {
+      console.error('Checkout error:', error);
+      toast.error('Checkout failed. Please try again.');
     }
   };
+
+  const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const totalPrice = cart.reduce((sum, item) => sum + item.productPrice * item.quantity, 0);
 
   return (
     <CartContext.Provider
       value={{
         cart,
-        addToCart,
-        removeFromCart,
-        updateQuantity,
+        cartToken,
         totalItems,
         totalPrice,
-        checkout,
+        fetchCartItems,
+        removeFromCart,
+        updateQuantity,
         clearCart,
-        currentOrder
+        checkout,
+        currentOrder,
       }}
     >
       {children}
     </CartContext.Provider>
   );
-}
+};
 
-export function useCart() {
-  const context = useContext(CartContext);
-  if (!context) throw new Error('useCart must be used within a CartProvider');
-  return context;
-}
+export const useCart = () => useContext(CartContext);

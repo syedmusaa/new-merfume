@@ -84,7 +84,7 @@ export default defineConfig({
     emptyOutDir: true,
   },
   server: {
-    port: 8080, // 👈 change dev server port to 8080
+    port: 8081, // 👈 change dev server port to 8080
   },
   plugins: [react()],
   resolve: {

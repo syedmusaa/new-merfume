@@ -185,53 +185,123 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ShoppingCart, Heart, Star } from "lucide-react";
-import { useCart } from "@/components/CartContext";
+import { toast } from "sonner";
 
 interface ProductCardProps {
-  id: string;
-  name: string;
+  productId: number;
+  productName: string;
   brand: string;
-  price: number;
+  productPrice: number;
   originalPrice?: number;
-  image: string;
-  backImage?: string;
+  productImageUrl: string;
+  productBackImageUrl?: string;
   rating: number;
   reviewCount: number;
-  description: string;
+  productDescription: string;
   notes: string[];
-  onAddToCart: () => void;
-  onToggleFavorite?: (id: string) => void;
-  isInCart: boolean;
+  onToggleFavorite?: (id: number) => void;
   isFavorite?: boolean;
   className?: string;
   style?: React.CSSProperties;
 }
 
 export default function ProductCard({
-  id,
-  name,
+  productId,
+  productName,
   brand,
-  price,
+  productPrice,
   originalPrice,
-  image,
-  backImage,
+  productImageUrl,
+  productBackImageUrl,
   rating,
   reviewCount,
-  description,
+  productDescription,
   notes,
-  onAddToCart,
   onToggleFavorite,
   isFavorite = false,
-  isInCart,
   className,
   style,
 }: ProductCardProps) {
   const [isFlipped, setIsFlipped] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
+  const [added, setAdded] = useState(false);
+
+  const getCartToken = () => {
+    if (typeof window === "undefined") return "";
+    
+    let token = localStorage.getItem("cartToken");
+    if (!token) {
+      token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+      localStorage.setItem("cartToken", token);
+    }
+    return token;
+  };
 
   const handleToggleFavorite = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onToggleFavorite?.(id);
+    onToggleFavorite?.(productId);
   };
+
+  const handleAddToCart = async (e: React.MouseEvent) => {
+  e.stopPropagation();
+
+  if (isAdding) return;
+
+  setIsAdding(true);
+  try {
+    const cartToken = getCartToken();
+
+    const response = await fetch("https://3029ebe32b64.ngrok-free.app/api/cart/add", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Cart-Token": cartToken,
+      },
+      body: JSON.stringify({
+        productId,
+        quantity: 1,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to add to cart");
+    }
+
+    const addedItem = {
+      productId,
+      productName,
+      brand,
+      productPrice,
+      quantity: 1,
+      productImageUrl,
+    };
+
+    // ✅ Save to localStorage.cart[]
+    const existingCart = JSON.parse(localStorage.getItem("cart") || "[]");
+    
+    const index = existingCart.findIndex((item: any) => item.productId === productId);
+    if (index > -1) {
+      // If already exists, increase quantity
+      existingCart[index].quantity += 1;
+    } else {
+      existingCart.push(addedItem);
+    }
+
+    localStorage.setItem("cart", JSON.stringify(existingCart));
+
+    setAdded(true);
+    toast.success("Added to cart successfully");
+
+    setTimeout(() => setAdded(false), 2000);
+  } catch (error) {
+    console.error("Error adding to cart:", error);
+    toast.error(error instanceof Error ? error.message : "Failed to add to cart");
+  } finally {
+    setIsAdding(false);
+  }
+};
+
 
   return (
     <div className={`group perspective-1000 h-96 ${className}`} style={style}>
@@ -239,14 +309,18 @@ export default function ProductCard({
         className={`relative w-full h-full transition-all duration-700 transform-style-preserve-3d ${
           isFlipped ? "rotate-y-180" : ""
         }`}
-        onMouseEnter={() => backImage && setIsFlipped(true)}
+        onMouseEnter={() => productBackImageUrl && setIsFlipped(true)}
         onMouseLeave={() => setIsFlipped(false)}
       >
-        {/* Front of card */}
-        <Card className="absolute inset-0 backface-hidden border-border/50 hover:border-gold/50 transition-colors overflow-hidden h-full">
+        {/* Front of Card */}
+        <Card className="absolute inset-0 backface-hidden border border-border/50 hover:border-gold/50 transition overflow-hidden h-full">
           <CardContent className="p-0 h-full flex flex-col">
             <div className="relative flex-1">
-              <img src={image} alt={name} className="w-full h-48 object-cover" />
+              <img 
+                src={productImageUrl} 
+                alt={productName} 
+                className="w-full h-48 object-cover" 
+              />
               {onToggleFavorite && (
                 <Button
                   variant="ghost"
@@ -260,12 +334,12 @@ export default function ProductCard({
                 </Button>
               )}
               {originalPrice && (
-                <div className="absolute top-3 left-3 bg-gold text-luxury-black px-2 py-1 text-xs font-semibold rounded">
+                <div className="absolute top-3 left-3 bg-gold text-black px-2 py-1 text-xs font-semibold rounded">
                   SALE
                 </div>
               )}
             </div>
-            <div className="p-4 flex-shrink-0">
+            <div className="p-4">
               <div className="flex items-center gap-1 mb-2">
                 {[...Array(5)].map((_, i) => (
                   <Star
@@ -283,47 +357,45 @@ export default function ProductCard({
               </div>
               <p className="text-sm text-muted-foreground mb-1">{brand}</p>
               <h3 className="font-semibold text-foreground mb-2 line-clamp-2">
-                {name}
+                {productName}
               </h3>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="text-lg font-bold text-gold">${price}</span>
+                  <span className="text-lg font-bold text-gold">₹{productPrice}</span>
                   {originalPrice && (
                     <span className="text-sm text-muted-foreground line-through">
-                      ${originalPrice}
+                      ₹{originalPrice}
                     </span>
                   )}
                 </div>
                 <Button
                   size="sm"
-                  className="bg-gold hover:bg-gold-dark text-luxury-black"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onAddToCart();
-                  }}
+                  className="bg-gold hover:bg-gold-dark text-black"
+                  onClick={handleAddToCart}
+                  disabled={isAdding || added}
                 >
-                  <ShoppingCart className="h-4 w-4" />
+                  {isAdding ? "Adding..." : added ? "Added" : <ShoppingCart className="h-4 w-4" />}
                 </Button>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Back of card */}
-        {backImage && (
-          <Card className="absolute inset-0 backface-hidden rotate-y-180 border-border/50 overflow-hidden h-full">
+        {/* Back of Card */}
+        {productBackImageUrl && (
+          <Card className="absolute inset-0 backface-hidden rotate-y-180 border border-border/50 overflow-hidden h-full">
             <CardContent className="p-0 h-full flex flex-col">
               <div className="relative flex-1">
                 <img
-                  src={backImage}
-                  alt={`${name} - Back view`}
+                  src={productBackImageUrl}
+                  alt={`${productName} - Back view`}
                   className="w-full h-48 object-cover"
                 />
               </div>
-              <div className="p-4 flex-shrink-0">
-                <h3 className="font-semibold text-foreground mb-2">{name}</h3>
+              <div className="p-4">
+                <h3 className="font-semibold text-foreground mb-2">{productName}</h3>
                 <p className="text-sm text-muted-foreground mb-3 line-clamp-3">
-                  {description}
+                  {productDescription}
                 </p>
                 <div className="mb-3">
                   <p className="text-xs font-medium text-foreground mb-1">Notes:</p>
@@ -339,13 +411,11 @@ export default function ProductCard({
                   </div>
                 </div>
                 <Button
-                  className="w-full mt-4"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onAddToCart();
-                  }}
+                  className="w-full mt-auto"
+                  onClick={handleAddToCart}
+                  disabled={isAdding || added}
                 >
-                  {isInCart ? "Added to Cart" : "Add to Cart"}
+                  {isAdding ? "Adding..." : added ? "Added to Cart" : "Add to Cart"}
                 </Button>
               </div>
             </CardContent>
