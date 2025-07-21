@@ -396,6 +396,7 @@ const CartContext = createContext<CartContextType>({
   currentOrder: null,
 });
 
+
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartToken, setCartToken] = useState<string | null>(null);
@@ -412,11 +413,14 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     return 'cart-' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
   };
 
+
+  const API_BASE_URL = "https://6d26ae5752e4.ngrok-free.app";//${API_BASE_URL}
+
   const fetchCartItems = useCallback(async () => {
     if (!cartToken) return;
 
     try {
-      const response = await fetch('https://3029ebe32b64.ngrok-free.app/api/cart/items', {
+      const response = await fetch('https://6d26ae5752e4.ngrok-free.app/api/cart/items', {
         headers: {
           'Content-Type': 'application/json',
           'Cart-Token': cartToken,
@@ -438,7 +442,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   if (!cartToken) return;
 
   try {
-    const response = await fetch(`https://3029ebe32b64.ngrok-free.app/api/cart/remove/${cartId}`, {
+    const response = await fetch(`https://6d26ae5752e4.ngrok-free.app/api/cart/remove/${cartId}`, {
       method: 'DELETE',
       headers: {
         'Cart-Token': cartToken,
@@ -465,7 +469,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
     try {
       const response = await fetch(
-        `https://3029ebe32b64.ngrok-free.app/api/cart/update/${itemId}?quantity=${quantity}`,
+        `https://6d26ae5752e4.ngrok-free.app/api/cart/update/${itemId}?quantity=${quantity}`,
         {
           method: 'PUT',
           headers: {
@@ -490,7 +494,7 @@ const clearCart = async () => {
   if (!cartToken) return;
 
   try {
-    const response = await fetch('https://3029ebe32b64.ngrok-free.app/api/cart/clear', {
+    const response = await fetch('https://6d26ae5752e4.ngrok-free.app/api/cart/clear', {
       method: 'DELETE',
       headers: {
         'Cart-Token': cartToken,
@@ -513,7 +517,7 @@ const clearCart = async () => {
 
     try {
       // First create the order in your backend
-      const orderResponse = await fetch('https://3029ebe32b64.ngrok-free.app/api/orders', {
+      const orderResponse = await fetch('https://6d26ae5752e4.ngrok-free.app/api/orders', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

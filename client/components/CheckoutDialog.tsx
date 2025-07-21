@@ -538,7 +538,9 @@ export default function CheckoutDialog({
         }))
       };
 
-      const response = await fetch("https://3029ebe32b64.ngrok-free.app/api/orders/create", {
+      const API_BASE_URL = "https://6d26ae5752e4.ngrok-free.app";//${API_BASE_URL}
+
+      const response = await fetch(`${API_BASE_URL}/api/orders/create`, {
         method: "POST",
          headers: {
     'Content-Type': 'application/json',

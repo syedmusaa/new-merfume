@@ -746,9 +746,11 @@ interface Product {
   productCategory: string;
 }
 
+export const API_BASE_URL = "https://6d26ae5752e4.ngrok-free.app";//${API_BASE_URL}
+
 export async function fetchProducts(): Promise<Product[]> {
   try {
-    const response = await fetch('https://be2954fd148c.ngrok-free.app/api/products/all', {
+    const response = await fetch('${API_BASE_URL}/api/products/all', {
       headers: {
     'Content-Type': 'application/json',
     'ngrok-skip-browser-warning': '69420' // यह ngrok के ब्राउज़र वार्निंग को स्किप करेगा
