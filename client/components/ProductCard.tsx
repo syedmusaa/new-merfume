@@ -251,8 +251,8 @@ export default function ProductCard({
   try {
     const cartToken = getCartToken();
 
-    const API_BASE_URL = "https://6d26ae5752e4.ngrok-free.app";//${API_BASE_URL}
-    const response = await fetch(`${API_BASE_URL}/api/cart/add`, {
+    const API_BASE_URL = "https://b23c56c64571.ngrok-free.app";//${API_BASE_URL}
+    const response = await fetch(`https://b23c56c64571.ngrok-free.app/api/cart/add`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
