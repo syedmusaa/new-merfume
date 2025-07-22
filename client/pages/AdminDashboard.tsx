@@ -1529,7 +1529,7 @@ export default function AdminDashboard() {
   // Fetch orders from backend
   const fetchOrdersFromBackend = () => {
     setLoading(prev => ({...prev, orders: true}));
-    fetch("https://cfffda91db71.ngrok-free.app/api/orders/admin/all-orders", {
+    fetch("https://d40b5313bca3.ngrok-free.app/api/orders/admin/all-orders", {
       method: "GET",
       headers: {
         'Content-Type': 'application/json',
@@ -1574,7 +1574,7 @@ export default function AdminDashboard() {
   // Fetch inquiries from backend
   const fetchInquiriesFromBackend = () => {
     setLoading(prev => ({...prev, inquiries: true}));
-    fetch("https://cfffda91db71.ngrok-free.app/api/inquiries/all", {
+    fetch("https://d40b5313bca3.ngrok-free.app/api/inquiries/all", {
       method: "GET",
       headers: {
         'Content-Type': 'application/json',
@@ -1642,14 +1642,14 @@ export default function AdminDashboard() {
       formData.append("frontImage", frontImage);
       formData.append("backImage", backImage);
 
-      const response = await fetch("https://cfffda91db71.ngrok-free.app/api/products/add", {
+      const response = await fetch("https://d40b5313bca3.ngrok-free.app/api/products/add", {
         method: "POST",
         body: formData,
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Network error please refresh the page.");
+        throw new Error("Network error please refresh the page.");
       }
 
       const data = await response.json();
@@ -1664,7 +1664,7 @@ export default function AdminDashboard() {
       console.error("Error adding product:", error);
       toast({
         title: "Warning",
-        description: error instanceof Error ? error.message : "Network error please refresh the page.",
+        description: "Network error please refresh the page.",
         variant: "destructive",
       });
     } finally {
@@ -1831,7 +1831,7 @@ export default function AdminDashboard() {
 
   const deleteInquiry = async (inquiryId: string | number) => {
     try {
-      const response = await fetch(`https://cfffda91db71.ngrok-free.app/api/inquiries/${inquiryId}`, {
+      const response = await fetch(`https://d40b5313bca3.ngrok-free.app/api/inquiries/${inquiryId}`, {
         method: "DELETE",
         headers: {
           'Content-Type': 'application/json',
@@ -1855,7 +1855,7 @@ export default function AdminDashboard() {
       console.error("Error deleting inquiry:", error);
       toast({
         title: "Warning",
-        description: error instanceof Error ? error.message : "Network error please refresh the page.",
+        description: "Network error please refresh the page.",
         variant: "destructive",
       });
     }

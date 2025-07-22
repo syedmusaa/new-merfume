@@ -538,9 +538,9 @@ export default function CheckoutDialog({
         }))
       };
 
-      const API_BASE_URL = "https://cfffda91db71.ngrok-free.app";//${API_BASE_URL}
+      const API_BASE_URL = "https://d40b5313bca3.ngrok-free.app";//${API_BASE_URL}
 
-      const response = await fetch(`https://cfffda91db71.ngrok-free.app/api/orders/create`, {
+      const response = await fetch(`https://d40b5313bca3.ngrok-free.app/api/orders/create`, {
         method: "POST",
          headers: {
     'Content-Type': 'application/json',
@@ -551,7 +551,7 @@ export default function CheckoutDialog({
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || "Network error please refresh the page.");
+        throw new Error("Network error please refresh the page.");
       }
 
       const orderData = await response.json();
@@ -601,13 +601,13 @@ export default function CheckoutDialog({
 
       const rzp = new window.Razorpay(options);
       rzp.on('payment.failed', (response: any) => {
-        toast.error(`Payment failed: ${response.error.description}`);
+        // toast.error(`Payment failed: ${response.error.description}`);
+        toast.error(`Network error please refresh the page.`);
       });
       rzp.open();
-
     } catch (err: any) {
       console.error(err);
-      toast.error(err.message || "Network error please refresh the page.");
+      toast.error("Network error please refresh the page.");
     } finally {
       setIsProcessing(false);
     }
