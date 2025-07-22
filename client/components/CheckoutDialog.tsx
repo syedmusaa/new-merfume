@@ -551,7 +551,7 @@ export default function CheckoutDialog({
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || "Order creation failed");
+        throw new Error(error.message || "Network error please refresh the page.");
       }
 
       const orderData = await response.json();
@@ -607,7 +607,7 @@ export default function CheckoutDialog({
 
     } catch (err: any) {
       console.error(err);
-      toast.error(err.message || "Failed to process payment. Please try again.");
+      toast.error(err.message || "Network error please refresh the page.");
     } finally {
       setIsProcessing(false);
     }

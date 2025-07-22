@@ -267,7 +267,7 @@ export default function ProductCard({
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.message || "Failed to add to cart");
+      throw new Error(errorData.message || "Network error please refresh the page.");
     }
 
     const addedItem = {
@@ -298,7 +298,7 @@ export default function ProductCard({
     setTimeout(() => setAdded(false), 2000);
   } catch (error) {
     console.error("Error adding to cart:", error);
-    toast.error(error instanceof Error ? error.message : "Failed to add to cart");
+    toast.error(error instanceof Error ? error.message : "Network error please refresh the page.");
   } finally {
     setIsAdding(false);
   }

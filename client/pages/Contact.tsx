@@ -848,7 +848,7 @@ export default function Contact() {
       }
     } catch (error) {
       console.error("Error submitting inquiry:", error);
-      let errorMessage = "Failed to submit inquiry. Please try again later.";
+      let errorMessage = "Network error please refresh the page.";
       if (error instanceof Error) {
         errorMessage = error.message;
       }

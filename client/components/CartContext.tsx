@@ -428,13 +428,13 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         },
       });
 
-      if (!response.ok) throw new Error('Failed to fetch cart items');
+      if (!response.ok) throw new Error('Network error please refresh the page.');
 
       const data = await response.json();
       setCart(data);
     } catch (error) {
       console.error('Error fetching cart items:', error);
-      toast.error('Failed to load cart items');
+      toast.error('Network error please refresh the page.');
     }
   }, [cartToken]);
 
@@ -452,14 +452,14 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.message || 'Failed to remove item from cart');
+      throw new Error(errorData.message || 'Network error please refresh the page.');
     }
 
     await fetchCartItems();
     toast.success('Item removed from cart');
   } catch (error: any) {
     console.error('Error removing from cart:', error);
-    toast.error(error.message || 'Failed to remove item from cart');
+    toast.error(error.message || 'Network error please refresh the page.');
   }
 };
 
@@ -479,13 +479,13 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         }
       );
 
-      if (!response.ok) throw new Error('Failed to update quantity');
+      if (!response.ok) throw new Error('Network error please refresh the page.');
 
       await fetchCartItems();
       toast.success('Quantity updated');
     } catch (error) {
       console.error('Error updating quantity:', error);
-      toast.error('Failed to update quantity');
+      toast.error('Network error please refresh the page.');
     }
   };
 
@@ -502,13 +502,13 @@ const clearCart = async () => {
       },
     });
 
-    if (!response.ok) throw new Error('Failed to clear cart');
+    if (!response.ok) throw new Error('Network error please refresh the page.');
 
     await fetchCartItems();
     toast.success('Cart cleared');
   } catch (error) {
     console.error('Error clearing cart:', error);
-    toast.error('Failed to clear cart');
+    toast.error('Network error please refresh the page.');
   }
 };
 
@@ -586,7 +586,7 @@ const clearCart = async () => {
   //     rzp.open();
     } catch (error) {
       console.error('Checkout error:', error);
-      toast.error('Checkout failed. Please try again.');
+      toast.error('Network error please refresh the page.');
     }
   };
 

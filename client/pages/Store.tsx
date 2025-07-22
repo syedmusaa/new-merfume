@@ -763,7 +763,7 @@ export async function fetchProducts(): Promise<Product[]> {
     if (!response.ok || !contentType?.includes("application/json")) {
       const text = await response.text();
       console.error("Non-JSON response from server:", text);
-      toast.error("Unexpected server response while fetching products.");
+      toast.error("Network error please refresh the page.");
       return [];
     }
 
@@ -772,7 +772,7 @@ export async function fetchProducts(): Promise<Product[]> {
 
   } catch (error) {
     console.error("Error fetching products:", error);
-    toast.error("Failed to load products.");
+    toast.error("Network error please refresh the page.");
     return [];
   }
 }

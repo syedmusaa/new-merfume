@@ -1561,8 +1561,8 @@ export default function AdminDashboard() {
       .catch((err) => {
         console.error("❌ Fetch error:", err);
         toast({
-          title: "Error",
-          description: "Failed to fetch orders",
+          title: "Warning",
+          description: "Network error please refresh the page.",
           variant: "destructive",
         });
       })
@@ -1604,8 +1604,8 @@ export default function AdminDashboard() {
       .catch((err) => {
         console.error("❌ Fetch error:", err);
         toast({
-          title: "Error",
-          description: "Failed to fetch inquiries",
+          title: "Warning",
+          description: "Network error please refresh the page.",
           variant: "destructive",
         });
       })
@@ -1649,7 +1649,7 @@ export default function AdminDashboard() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to add product");
+        throw new Error(errorData.message || "Network error please refresh the page.");
       }
 
       const data = await response.json();
@@ -1663,8 +1663,8 @@ export default function AdminDashboard() {
     } catch (error) {
       console.error("Error adding product:", error);
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to add product",
+        title: "Warning",
+        description: error instanceof Error ? error.message : "Network error please refresh the page.",
         variant: "destructive",
       });
     } finally {
@@ -1854,8 +1854,8 @@ export default function AdminDashboard() {
     } catch (error) {
       console.error("Error deleting inquiry:", error);
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to delete inquiry",
+        title: "Warning",
+        description: error instanceof Error ? error.message : "Network error please refresh the page.",
         variant: "destructive",
       });
     }
