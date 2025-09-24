@@ -1574,7 +1574,7 @@ export default function AdminDashboard() {
   // Fetch inquiries from backend
   const fetchInquiriesFromBackend = () => {
     setLoading(prev => ({...prev, inquiries: true}));
-    fetch("https://a3afeb5462ca.ngrok-free.app/api/inquiries/all", {
+    fetch("https://merfume-backend-1.onrender.com/api/inquiries/all", {
       method: "GET",
       headers: {
         'Content-Type': 'application/json',
