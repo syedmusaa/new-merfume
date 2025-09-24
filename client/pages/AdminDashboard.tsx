@@ -1529,7 +1529,7 @@ export default function AdminDashboard() {
   // Fetch orders from backend
   const fetchOrdersFromBackend = () => {
     setLoading(prev => ({...prev, orders: true}));
-    fetch("https://a3afeb5462ca.ngrok-free.app/api/orders/admin/all-orders", {
+    fetch("https://merfume-backend-1.onrender.com/api/orders/admin/all-orders", {
       method: "GET",
       headers: {
         'Content-Type': 'application/json',
@@ -1642,7 +1642,7 @@ export default function AdminDashboard() {
       formData.append("frontImage", frontImage);
       formData.append("backImage", backImage);
 
-      const response = await fetch("https://a3afeb5462ca.ngrok-free.app/api/products/add", {
+      const response = await fetch("https://merfume-backend-1.onrender.com/api/products/add", {
         method: "POST",
         body: formData,
       });
@@ -1831,7 +1831,7 @@ export default function AdminDashboard() {
 
   const deleteInquiry = async (inquiryId: string | number) => {
     try {
-      const response = await fetch(`https://a3afeb5462ca.ngrok-free.app/api/inquiries/${inquiryId}`, {
+      const response = await fetch(`https://merfume-backend-1.onrender.com/api/inquiries/${inquiryId}`, {
         method: "DELETE",
         headers: {
           'Content-Type': 'application/json',
