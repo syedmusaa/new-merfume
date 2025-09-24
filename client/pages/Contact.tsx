@@ -799,7 +799,7 @@ export default function Contact() {
     setFormData((prev) => ({ ...prev, inquiryType: value }));
   };
 
-  const API_BASE_URL = "https://a3afeb5462ca.ngrok-free.app";//${API_BASE_URL}
+  const API_BASE_URL = "https://merfume-backend-1.onrender.com";//${API_BASE_URL}
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
