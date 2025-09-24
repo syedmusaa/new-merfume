@@ -299,7 +299,7 @@ export default function Success() {
         setOrder(parsedOrder);
 
         // Send to backend
-        fetch("http://localhost:8081/api/send-orders", {
+        fetch("https://merfume-backend-1.onrender.com/api/send-orders", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: savedOrder,
